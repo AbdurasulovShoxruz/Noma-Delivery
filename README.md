@@ -20,3 +20,4 @@ Open `index.html` in a browser (mobile view in DevTools).
 ## Next (live version)
 `place()` in index.html is where the order should be POSTed to `/api/order`
 (save to Supabase, then message the store's admin chat with Accept / Delivered buttons).
+# Noma-Delivery
