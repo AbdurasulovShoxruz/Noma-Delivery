@@ -1,11 +1,13 @@
 <!doctype html>
-<html lang="en">
+<html lang="uz">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#F7F5F0">
 <title>NOMA</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
@@ -143,6 +145,16 @@ input,select{font:inherit;color:inherit}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 .empty{text-align:center;padding:70px 0}
 .empty h2{font-family:var(--serif);font-style:italic;font-weight:500;font-size:34px;margin:0 0 8px}
+.map-wrap{position:relative;isolation:isolate;border-radius:var(--r);overflow:hidden;height:280px;border:1px solid var(--line);margin-top:2px}
+#map{position:absolute;inset:0;background:var(--tile)}
+.maperr{padding:24px;color:var(--mute);font-size:13px}
+.pin{position:absolute;left:50%;top:50%;width:30px;height:40px;transform:translate(-50%,-100%);pointer-events:none;z-index:1000}
+.pin svg{width:100%;height:100%;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
+.vphone{font-size:16px;padding:8px 0;border-bottom:1px solid var(--line)}
+.field span.tag{display:inline-block;margin:0 0 0 10px;padding:2px 8px;letter-spacing:.12em;font-size:10px;color:#1d6b3a;border:1px solid #bfdcc9;border-radius:999px;vertical-align:middle}
+.banner{background:var(--tile);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--mute);margin-top:6px;text-align:center}
+.leaflet-container{font-family:var(--sans);font-size:11px}
+.small{font-size:12px}
 </style>
 </head>
 <body>
@@ -203,6 +215,28 @@ uz:{shop:'Do\u2019kon',bag:'Savat',quickBag:'Savatga',addToBag:'Savatga qo\u2018
  payNote:'Demo rejim: haqiqiy to\u2018lov olinmaydi.',skuMaterial:{linen:'100% zig\u2018ir',cotton:'100% organik paxta',wool:'Jun aralashmasi',knit:'Merinos juni',canvas:'Qalin kanvas',viscose:'Viskoza krep'}}
 };
 const CUR = {en:"so\u2019m",ru:"сум",uz:"so\u2019m"};
+Object.assign(I.uz,{
+ verifyTitle:'Raqamingizni tasdiqlang',
+ verifySub:'Buyurtma berish uchun Telegram raqamingizni yuboring. Kuryer shu raqam orqali siz bilan bog‘lanadi.',
+ shareNumber:'📱 Raqamni yuborish', recheck:'Yubordim, tekshirish', checking:'Tekshirilmoqda…',
+ notYet:'Raqam hali tasdiqlanmadi. Qayta urinib ko‘ring.',
+ verifyNote:'Faqat o‘zingizning Telegram raqamingiz qabul qilinadi. U faqat buyurtmani yetkazish uchun ishlatiladi.',
+ phoneOk:'tasdiqlangan', mapHint:'Xaritani suring: belgi eshigingiz oldida bo‘lsin', useMyLoc:'📍 Mening joylashuvim',
+ locating:'Aniqlanmoqda…', locDenied:'Joylashuvga ruxsat berilmadi', outsideZone:'Yetkazib berish faqat Toshkent shahri ichida',
+ pinRequired:'Xaritada joyni belgilang', addressNote:'Manzil va mo‘ljal (ko‘cha, uy, kvartira)', sending:'Yuborilmoqda…',
+ errGeneric:'Xatolik. Qayta urinib ko‘ring.', demoBanner:'Demo rejim: server ulanmagan',
+ sentToStore:'Buyurtmangiz do‘konga yuborildi. Holat haqida Telegramda xabar beramiz.'});
+Object.assign(I.ru,{
+ verifyTitle:'Подтвердите номер',
+ verifySub:'Чтобы оформить заказ, отправьте номер вашего Telegram. Курьер свяжется с вами по этому номеру.',
+ shareNumber:'📱 Отправить номер', recheck:'Я отправил, проверить', checking:'Проверяем…',
+ notYet:'Номер пока не подтверждён. Попробуйте ещё раз.',
+ verifyNote:'Принимается только номер вашего Telegram. Он используется только для доставки заказа.',
+ phoneOk:'подтверждён', mapHint:'Двигайте карту, чтобы метка была у вашего подъезда', useMyLoc:'📍 Моё местоположение',
+ locating:'Определяем…', locDenied:'Нет доступа к геолокации', outsideZone:'Доставка только по Ташкенту',
+ pinRequired:'Отметьте место на карте', addressNote:'Адрес и ориентир (улица, дом, квартира)', sending:'Отправляем…',
+ errGeneric:'Ошибка. Попробуйте ещё раз.', demoBanner:'Демо-режим: сервер не подключён',
+ sentToStore:'Ваш заказ отправлен в магазин. Мы сообщим о статусе в Telegram.'});
 const DISTRICTS = ['Yunusobod','Mirzo Ulug\u2018bek','Chilonzor','Yakkasaroy','Shayxontohur','Mirobod','Olmazor','Sergeli','Uchtepa','Yashnobod','Bektemir','Yangihayot'];
 
 /* ---------- Data ---------- */
@@ -225,7 +259,7 @@ const P = [
  {id:8,cat:'men',art:'shorts',price:249000,mat:'cotton',sizes:CL,colors:['#C7B89C','#181818','#7C8A9A'],
   name:{en:'Chino Shorts',ru:'Шорты чино',uz:'Chino shortik'}},
  {id:9,cat:'women',art:'skirt',price:399000,mat:'viscose',sizes:CL,colors:['#181818','#C9B79C','#5A4B3F'],
-  name:{en:'Pleated Skirt',ru:'Плиссированная юбка',uz:'Pilissirovka yubka'}},
+  name:{en:'Pleated Skirt',ru:'Плиссированная юбка',uz:'Plisse yubka'}},
  {id:10,cat:'accessories',art:'tote',price:129000,mat:'canvas',sizes:null,colors:['#FFFFFF','#181818'],
   name:{en:'Canvas Tote',ru:'Сумка-шоппер',uz:'Kanvas sumka'}},
  {id:11,cat:'accessories',art:'scarf',price:219000,mat:'wool',sizes:null,colors:['#B8A88F','#3A3733','#7C8A9A'],
@@ -259,13 +293,13 @@ function art(p, hex){
 /* ---------- State ---------- */
 const dl = (tgUser && tgUser.language_code || navigator.language || 'en').slice(0,2);
 const S = {
-  lang: (()=>{ try{ const s=localStorage.getItem('noma_lang'); if(s) return s; }catch(e){} return I[dl]?dl:'en'; })(),
+  lang: (()=>{ try{ const s=localStorage.getItem('noma_lang'); if(s==='uz'||s==='ru') return s; }catch(e){} return dl==='ru'?'ru':'uz'; })(),
   cat:'all', nav:['home'], pid:null, sel:{size:null,color:0}, sheet:null,
   bag: (()=>{ try{ return JSON.parse(localStorage.getItem('noma_bag')||'[]'); }catch(e){ return []; } })(),
-  co:{name:(tgUser&&[tgUser.first_name,tgUser.last_name].filter(Boolean).join(' '))||'',phone:'',type:'courier',district:'',address:'',pay:'cash'},
-  err:{}, order:null
+  co:{name:(tgUser&&[tgUser.first_name,tgUser.last_name].filter(Boolean).join(' '))||'',phone:'',type:'courier',district:'',address:'',pay:'cash',lat:null,lon:null,pin:false},
+  err:{}, order:null, live:false, verified:false, phone:'', bot:'', demoNote:false, busy:false, addrAuto:true, verifyMsg:'', map:null
 };
-const t = k => (I[S.lang][k] ?? I.en[k] ?? k);
+const t = k => (I[S.lang][k] ?? I.uz[k] ?? k);
 const $ = s => document.querySelector(s);
 const fmt = n => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ') + ' ' + CUR[S.lang];
 const pById = id => P.find(p=>p.id===id);
@@ -281,7 +315,7 @@ function back(){ if(S.nav.length>1){ S.nav.pop(); render(); window.scrollTo(0,0)
 
 /* ---------- Views ---------- */
 function topbar(){
-  $('#langs').innerHTML = ['en','ru','uz'].map(l=>`<button data-a="lang" data-v="${l}" class="${S.lang===l?'on':''}">${l.toUpperCase()}</button>`).join('');
+  $('#langs').innerHTML = ['uz','ru'].map(l=>`<button data-a="lang" data-v="${l}" class="${S.lang===l?'on':''}">${l.toUpperCase()}</button>`).join('');
   const n = count(); const b=$('#badge'); b.hidden = !n; b.textContent = n;
   document.documentElement.lang = S.lang;
 }
@@ -328,39 +362,52 @@ function bagView(){
 function checkout(){
   const c=S.co, e=S.err, sub=subtotal(), fee=shipFee();
   const er = k => e[k]?`<div class="errtxt">${t('req')}</div>`:'';
-  return `<div class="backrow"><button class="link" data-a="back">\u2190 ${t('back')}</button></div>
+  const ph = S.phone||'';
+  const shown = /^998\d{9}$/.test(ph) ? '+998 '+fmtPhone(ph.slice(3)) : '+'+ph;
+  const phoneBlock = S.live
+    ? `<div class="field"><span>${t('phone')}</span><div class="vphone">${shown}<span class="tag ok">✓ ${t('phoneOk')}</span></div></div>`
+    : `<label class="field"><span>${t('phone')}</span><div class="phone"><b>+998</b><input class="inp ${e.phone?'err':''}" id="f-phone" inputmode="numeric" placeholder="90 123 45 67" value="${fmtPhone(c.phone)}"></div>${er('phone')}</label>`;
+  const courier = c.type==='courier' ? `
+    <div class="field"><span>${t('mapHint')}</span>
+      <div class="map-wrap"><div id="map"></div><div class="pin"><svg viewBox="0 0 30 40"><path d="M15 39C15 39 2 23 2 14a13 13 0 0 1 26 0c0 9-13 25-13 25z" fill="#181818"/><circle cx="15" cy="14" r="5" fill="#F7F5F0"/></svg></div></div>
+      <button class="pill ghost sm" style="margin-top:10px" data-a="locate">${t('useMyLoc')}</button>
+      <div class="errtxt" id="zone" style="display:none"></div></div>
+    <label class="field"><span>${t('addressNote')}</span><input class="inp ${e.address?'err':''}" id="f-address" value="${c.address.replace(/"/g,'&quot;')}" autocomplete="street-address">${er('address')}</label>` : '';
+  return `<div class="backrow"><button class="link" data-a="back">← ${t('back')}</button></div>
   <h2 style="font-family:var(--serif);font-weight:500;font-size:34px;margin:0">${t('checkout')}</h2>
   <div class="panel"><div class="label" style="margin-top:0">${t('details')}</div>
     <label class="field"><span>${t('name')}</span><input class="inp ${e.name?'err':''}" id="f-name" value="${c.name.replace(/"/g,'&quot;')}" autocomplete="name">${er('name')}</label>
-    <label class="field"><span>${t('phone')}</span><div class="phone"><b>+998</b><input class="inp ${e.phone?'err':''}" id="f-phone" inputmode="numeric" placeholder="90 123 45 67" value="${fmtPhone(c.phone)}"></div>${er('phone')}</label></div>
+    ${phoneBlock}</div>
   <div class="panel"><div class="label" style="margin-top:0">${t('deliveryType')}</div>
     <div class="choice"><button class="${c.type==='courier'?'on':''}" data-a="type" data-v="courier">${t('courier')}<small>${t('courierSub')}</small></button>
     <button class="${c.type==='pickup'?'on':''}" data-a="type" data-v="pickup">${t('pickup')}<small>${t('pickupSub')}</small></button></div>
-    ${c.type==='courier'?`<label class="field"><span>${t('district')}</span><select class="inp ${e.district?'err':''}" id="f-district"><option value="">${t('pickDistrict')}</option>${DISTRICTS.map(d=>`<option ${c.district===d?'selected':''}>${d}</option>`).join('')}</select>${er('district')}</label>
-    <label class="field"><span>${t('address')}</span><input class="inp ${e.address?'err':''}" id="f-address" value="${c.address.replace(/"/g,'&quot;')}" autocomplete="street-address">${er('address')}</label>`:''}</div>
+    ${courier}</div>
   <div class="panel"><div class="label" style="margin-top:0">${t('payment')}</div><div class="pay">
     ${[['cash',t('cash')],['card',t('card')],['online',t('online')]].map(([k,l])=>`<button class="${c.pay===k?'on':''}" data-a="pay" data-v="${k}"><span>${l}${k==='online'?`<span class="tag">${t('demo')}</span>`:''}</span><span class="dot"></span></button>`).join('')}</div>
     ${c.pay==='online'?`<p class="muted" style="font-size:12px;margin:10px 0 0">${t('payNote')}</p>`:''}</div>
   <div class="sum"><div><span class="muted">${t('subtotal')}</span><span>${fmt(sub)}</span></div>
   <div><span class="muted">${t('delivery')}</span><span>${!fee?t('free'):fmt(fee)}</span></div>
   <div class="tot"><span>${t('total')}</span><span>${fmt(sub+fee)}</span></div></div>
-  <div class="dock"><button class="pill full" data-a="place">${t('placeOrder')} \u00B7 ${fmt(sub+fee)}</button></div>`;
+  <div class="dock"><button class="pill full" data-a="place" ${S.busy?'disabled':''}>${S.busy?t('sending'):`${t('placeOrder')} · ${fmt(sub+fee)}`}</button></div>`;
 }
 function done(){
   const o=S.order;
-  const lines=o.items.map(l=>`${l.qty} \u00D7 ${pById(l.id).name[S.lang]} (${l.size||t('oneSize')})`).join('\n');
-  const where=o.type==='pickup'?t('pickup'):`${o.district}, ${o.address}`;
-  return `<div class="done"><div class="tick"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7.5"/></svg></div>
-  <h2>${t('orderPlaced')}</h2><p class="muted">${t('orderNo')} ${o.no}<br>${t('thanks')}</p>
-  <div class="owner"><div class="hd">${t('ownerSees')}</div><pre>\uD83D\uDECD ${t('newOrder')} ${o.no}
-${o.name} \u00B7 +998 ${fmtPhone(o.phone)}
+  const head=`<div class="done"><div class="tick"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7.5"/></svg></div>
+  <h2>${t('orderPlaced')}</h2><p class="muted">${t('orderNo')} ${o.no}<br>${o.live?t('sentToStore'):t('thanks')}</p>`;
+  let owner='';
+  if(!o.live){
+    const lines=o.items.map(l=>`${l.qty} × ${pById(l.id).name[S.lang]} (${l.size||t('oneSize')})`).join('\n');
+    const where=o.type==='pickup'?t('pickup'):o.address;
+    owner=`<div class="owner"><div class="hd">${t('ownerSees')}</div><pre>🛍 ${t('newOrder')} ${o.no}
+${o.name} · +998 ${fmtPhone(o.phone)}
 
 ${lines}
 
 ${where}
 ${t('total')}: ${fmt(o.total)}</pre>
-  <div class="btns"><span>${t('accept')}</span><span>${t('delivered')}</span></div></div>
-  <div style="margin-top:26px"><button class="pill ghost" data-a="home">${t('backToShop')}</button></div></div>`;
+  <div class="btns"><span>${t('accept')}</span><span>${t('delivered')}</span></div></div>`;
+  }
+  return head+owner+`<div style="margin-top:26px"><button class="pill ghost" data-a="home">${t('backToShop')}</button></div></div>`;
 }
 function fmtPhone(d){ d=(d||'').replace(/\D/g,'').slice(0,9); const p=[d.slice(0,2),d.slice(2,5),d.slice(5,7),d.slice(7,9)].filter(Boolean); return p.join(' '); }
 
@@ -386,34 +433,168 @@ function addLine(id,size,color){
 }
 
 /* ---------- Render + events ---------- */
+function curView(){ return (S.live&&!S.verified)?'verify':view(); }
 function render(){
   topbar();
-  const v=view();
-  $('#app').innerHTML = v==='home'?home(): v==='pdp'?pdp(): v==='bag'?bagView(): v==='checkout'?checkout(): done();
+  const v=curView();
+  if(S.map){ try{ S.map.remove(); }catch(e){} S.map=null; }
+  const body = v==='verify'?verifyView(): v==='home'?home(): v==='pdp'?pdp(): v==='bag'?bagView(): v==='checkout'?checkout(): done();
+  $('#app').innerHTML = (S.demoNote?`<div class="banner">${t('demoBanner')}</div>`:'') + body;
   if(tg){
-    try{ if(S.nav.length>1 && v!=='done') tg.BackButton.show(); else tg.BackButton.hide(); }catch(e){}
+    try{ if(S.nav.length>1 && v!=='done' && v!=='verify') tg.BackButton.show(); else tg.BackButton.hide(); }catch(e){}
+    try{ if(v==='checkout' && S.co.type==='courier') tg.disableVerticalSwipes(); else tg.enableVerticalSwipes(); }catch(e){}
   }
-  if(v==='checkout') bindForm();
+  if(v==='checkout'){ bindForm(); if(S.co.type==='courier') initMap(); }
 }
 function bindForm(){
   const n=$('#f-name'), ph=$('#f-phone'), d=$('#f-district'), a=$('#f-address');
   if(n) n.oninput=()=>{S.co.name=n.value; S.err.name=0;};
   if(ph) ph.oninput=()=>{ S.co.phone=ph.value.replace(/\D/g,'').slice(0,9); ph.value=fmtPhone(S.co.phone); S.err.phone=0; };
   if(d) d.onchange=()=>{S.co.district=d.value; S.err.district=0;};
-  if(a) a.oninput=()=>{S.co.address=a.value; S.err.address=0;};
+  if(a) a.oninput=()=>{S.co.address=a.value; S.err.address=0; S.addrAuto=false;};
 }
-function place(){
+async function place(){
+  if(S.busy) return;
   const c=S.co, e={};
   if(!c.name.trim()) e.name=1;
-  if(c.phone.length!==9) e.phone=1;
-  if(c.type==='courier'){ if(!c.district) e.district=1; if(!c.address.trim()) e.address=1; }
+  if(!S.live && c.phone.length!==9) e.phone=1;
+  if(c.type==='courier'){
+    if(!c.address.trim()) e.address=1;
+    if(!c.pin) e.pin=1; else if(!inZone(c.lat,c.lon)) e.zone=1;
+  }
   S.err=e;
-  if(Object.keys(e).length){ render(); const el=document.querySelector('.err'); if(el) el.scrollIntoView({block:'center',behavior:'smooth'}); haptic('heavy'); return; }
+  if(Object.keys(e).length){
+    render(); haptic('heavy');
+    const z=document.getElementById('zone');
+    const el=document.querySelector('.err')||(z&&z.style.display!=='none'?z:null);
+    if(el) el.scrollIntoView({block:'center',behavior:'smooth'});
+    return;
+  }
+  if(S.live){
+    S.busy=true; render();
+    try{
+      const r=await api('/api/order',{initData:tg.initData,
+        items:S.bag.map(l=>({id:l.id,size:l.size,color:l.color,qty:l.qty})),
+        type:c.type,lat:c.lat,lon:c.lon,address:c.address.trim(),pay:c.pay,name:c.name.trim(),lang:S.lang});
+      S.order={live:true,no:r.no,total:r.total};
+      S.bag=[]; save(); S.busy=false; S.nav=['home','done']; render(); window.scrollTo(0,0);
+      try{ tg.HapticFeedback.notificationOccurred('success'); }catch(x){}
+    }catch(err){
+      S.busy=false;
+      const code=err.json&&err.json.error;
+      if(code==='not_verified'){ S.verified=false; S.nav=['verify']; render(); return; }
+      render(); toast(code==='outside_zone'?t('outsideZone'):t('errGeneric'));
+    }
+    return;
+  }
   const total=subtotal()+shipFee();
-  S.order={no:'NM-'+(1000+Math.floor(Math.random()*9000)),name:c.name.trim(),phone:c.phone,type:c.type,district:c.district,address:c.address.trim(),pay:c.pay,items:S.bag.slice(),total};
-  /* In the live version this is where the order is POSTed to /api/order (Supabase + Telegram notification). */
+  S.order={no:'NM-'+(1000+Math.floor(Math.random()*9000)),name:c.name.trim(),phone:c.phone,type:c.type,address:c.address.trim(),pay:c.pay,items:S.bag.slice(),total};
   S.bag=[]; save(); S.nav=['home','done']; render(); window.scrollTo(0,0); haptic('heavy');
-  try{ tg.HapticFeedback.notificationOccurred('success'); }catch(e){}
+  try{ tg.HapticFeedback.notificationOccurred('success'); }catch(x){}
+}
+
+/* ---------- Backend ---------- */
+async function api(path, body){
+  const r = await fetch(path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+  let j=null; try{ j=await r.json(); }catch(e){}
+  if(!r.ok){ const err=new Error('api'); err.status=r.status; err.json=j; throw err; }
+  return j;
+}
+async function init(){
+  if(inTG){
+    try{
+      const r=await api('/api/me',{initData:tg.initData});
+      S.live=true; S.verified=!!r.verified; S.phone=r.phone||''; S.bot=r.bot||'';
+    }catch(e){ S.live=false; S.demoNote=true; }
+  }
+  render();
+}
+
+/* ---------- Phone verification ---------- */
+function verifyView(){
+  return `<div class="done"><div class="tick"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 18h2"/></svg></div>
+  <h2>${t('verifyTitle')}</h2><p class="muted" style="max-width:320px;margin:0 auto 26px">${t('verifySub')}</p>
+  <button class="pill full" data-a="share" ${S.busy?'disabled':''}>${S.busy?t('checking'):t('shareNumber')}</button>
+  ${S.verifyMsg?`<p class="errtxt">${S.verifyMsg}</p>`:''}
+  <div style="margin-top:12px"><button class="pill ghost full" data-a="recheck" ${S.busy?'disabled':''}>${t('recheck')}</button></div>
+  <p class="muted" style="font-size:12px;margin-top:22px">${t('verifyNote')}</p></div>`;
+}
+function shareNumber(){
+  S.verifyMsg='';
+  if(tg && tg.requestContact && tg.isVersionAtLeast && tg.isVersionAtLeast('6.9')){
+    tg.requestContact(ok=>{ if(ok!==false) pollVerified(); });
+  } else if(tg && S.bot){
+    tg.openTelegramLink('https://t.me/'+S.bot+'?start=verify'); try{ tg.close(); }catch(e){}
+  }
+}
+async function pollVerified(){
+  if(S.busy) return;
+  S.busy=true; render();
+  for(let i=0;i<12;i++){
+    try{
+      const r=await api('/api/me',{initData:tg.initData});
+      if(r.verified){ S.verified=true; S.phone=r.phone||''; S.busy=false; S.nav=['home']; render(); haptic('medium'); return; }
+    }catch(e){}
+    await new Promise(r=>setTimeout(r,1000));
+  }
+  S.busy=false; S.verifyMsg=t('notYet'); render();
+}
+
+/* ---------- Delivery map (OpenStreetMap + Leaflet) ---------- */
+const TASH={lat:41.2995,lon:69.2401};
+const ZONE={latMin:41.15,latMax:41.47,lonMin:69.08,lonMax:69.45};
+const inZone=(la,lo)=>la>=ZONE.latMin&&la<=ZONE.latMax&&lo>=ZONE.lonMin&&lo<=ZONE.lonMax;
+function initMap(){
+  const el=document.getElementById('map'); if(!el) return;
+  if(!window.L){ el.innerHTML='<div class="maperr">Map unavailable</div>'; return; }
+  const has=S.co.lat!=null;
+  const map=L.map(el,{scrollWheelZoom:'center',touchZoom:'center',doubleClickZoom:'center'})
+    .setView(has?[S.co.lat,S.co.lon]:[TASH.lat,TASH.lon], has?17:12);
+  map.attributionControl.setPrefix(false);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);
+  map.on('dragend',()=>{ const c=map.getCenter(); setPin(c.lat,c.lng,false); });
+  S.map=map; zoneNote();
+}
+function setPin(la,lo,recenter){
+  S.co.lat=+la.toFixed(6); S.co.lon=+lo.toFixed(6); S.co.pin=true; S.err.pin=0; S.err.zone=0;
+  if(recenter&&S.map) S.map.setView([la,lo],17);
+  zoneNote(); reverse(la,lo);
+}
+function zoneNote(){
+  const n=document.getElementById('zone'); if(!n) return;
+  const out=S.co.pin&&!inZone(S.co.lat,S.co.lon);
+  if(out||S.err.zone){ n.textContent=t('outsideZone'); n.style.display='block'; }
+  else if(S.err.pin){ n.textContent=t('pinRequired'); n.style.display='block'; }
+  else n.style.display='none';
+}
+let geoT;
+function reverse(la,lo){
+  clearTimeout(geoT);
+  geoT=setTimeout(async()=>{
+    try{
+      const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&zoom=18&lat=${la}&lon=${lo}&accept-language=${S.lang}`);
+      const j=await r.json(), a=j.address||{};
+      const street=[a.road||a.pedestrian||a.footway, a.house_number].filter(Boolean).join(' ');
+      const txt=[street, a.suburb||a.neighbourhood||a.city_district||''].filter(Boolean).join(', ');
+      if(txt && S.addrAuto){ S.co.address=txt; S.err.address=0; const f=document.getElementById('f-address'); if(f){ f.value=txt; f.classList.remove('err'); const nx=f.nextElementSibling; if(nx&&nx.classList.contains('errtxt')) nx.remove(); } }
+    }catch(e){}
+  },700);
+}
+function locate(){
+  const fallback=()=>{
+    if(!navigator.geolocation){ toast(t('locDenied')); return; }
+    toast(t('locating'));
+    navigator.geolocation.getCurrentPosition(p=>setPin(p.coords.latitude,p.coords.longitude,true),()=>toast(t('locDenied')),{enableHighAccuracy:true,timeout:10000});
+  };
+  try{
+    if(tg && tg.LocationManager && tg.isVersionAtLeast('8.0')){
+      const lm=tg.LocationManager;
+      const get=()=>lm.getLocation(loc=>{ if(loc && loc.latitude!=null) setPin(loc.latitude,loc.longitude,true); else fallback(); });
+      if(lm.isInited) get(); else lm.init(get);
+      return;
+    }
+  }catch(e){}
+  fallback();
 }
 
 document.addEventListener('click',ev=>{
@@ -441,13 +622,16 @@ document.addEventListener('click',ev=>{
     case 'tocheckout': S.err={}; go('checkout'); break;
     case 'type': S.co.type=v; render(); break;
     case 'pay': S.co.pay=v; render(); break;
+    case 'share': shareNumber(); break;
+    case 'recheck': pollVerified(); break;
+    case 'locate': locate(); break;
     case 'place': place(); break;
   }
 });
-$('#bagbtn').addEventListener('click',()=>{ if(view()!=='bag'&&view()!=='checkout'&&view()!=='done'){ closeSheet(); go('bag'); } });
+$('#bagbtn').addEventListener('click',()=>{ const v=curView(); if(v!=='verify'&&v!=='bag'&&v!=='checkout'&&v!=='done'){ closeSheet(); go('bag'); } });
 $('#logo').addEventListener('click',()=>{ S.nav=['home']; closeSheet(); render(); window.scrollTo(0,0); });
 if(tg){ try{ tg.BackButton.onClick(back); }catch(e){} }
-render();
+init();
 </script>
 </body>
 </html>

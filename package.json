@@ -1,0 +1,8 @@
+{
+  "name": "noma-clothes",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NOMA: Telegram Mini App demo for clothing brands",
+  "engines": { "node": ">=20" },
+  "scripts": { "test": "node scripts/test.js" }
+}
