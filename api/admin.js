@@ -2,7 +2,7 @@
 /* Admin panel API. Login with ADMIN_PASSWORD (set in Vercel); returns a signed 12-hour token. */
 const crypto = require('crypto');
 const { env, tg, db, getOrder, patchOrder, clearShop } = require('../lib/common');
-const { CATALOG, ARTS, MATS, CATS, CL, COLOR_NAMES } = require('../lib/catalog');
+const { CATALOG, ARTS, MATS, CATS, SUBS, CL, COLOR_NAMES } = require('../lib/catalog');
 const { orderText, keyboard, nextStatuses, orderNo, CUSTOMER_NOTE } = require('../lib/render');
 
 const key = () => crypto.createHash('sha256').update(`${env('ADMIN_PASSWORD')}|${env('WEBHOOK_SECRET')}`).digest();
@@ -35,7 +35,7 @@ module.exports = async (req, res) => {
         db('promos?select=*&order=code').catch(() => null),
       ]);
       const catalog = Object.entries(CATALOG).map(([id, p]) => ({ id: +id, name: p.uz, price: p.price }));
-      return res.status(200).json({ orders: orders || [], customers: customers || [], catalog, products, promos: promos || [], opts: { ARTS, MATS, CATS, COLORS: COLOR_NAMES } });
+      return res.status(200).json({ orders: orders || [], customers: customers || [], catalog, products, promos: promos || [], opts: { ARTS, MATS, CATS, SUBS, COLORS: COLOR_NAMES } });
     }
 
     if (b.action === 'status') {
@@ -62,12 +62,24 @@ module.exports = async (req, res) => {
       const stock = p.stock === null || p.stock === '' || p.stock === undefined ? null : int(p.stock, 0, 100000);
       if (!name.uz || !name.ru || price === null || sale === null || (p.stock !== null && p.stock !== '' && p.stock !== undefined && stock === null) ||
           !colors.length || !CATS.includes(p.cat) || !ARTS.includes(p.art) || !MATS.includes(p.mat)) return res.status(400).json({ error: 'bad_product' });
+      const base = `${env('SUPABASE_URL')}/storage/v1/object/public/products/`;
+      const photos = (Array.isArray(p.photos) ? p.photos : []).filter((u) => typeof u === 'string' && u.startsWith(base)).slice(0, 3);
       let id = int(p.id, 1, 1e6);
       if (!id) { const all = (await db('shop_products?select=id')) || []; id = Math.max(99, ...all.map((r) => r.id)) + 1; }
       await db('shop_products?on_conflict=id', { method: 'POST', prefer: 'resolution=merge-duplicates',
-        body: { id, name, cat: p.cat, art: p.art, mat: p.mat, price, sale, stock, active: p.active !== false, sizes: p.sizes ? CL : null, colors } });
+        body: { id, name, cat: p.cat, art: p.art, mat: p.mat, price, sale, stock, active: p.active !== false, sizes: p.sizes ? CL : null, colors, sub: SUBS.includes(p.sub) ? p.sub : null, photos } });
       clearShop();
       return res.status(200).json({ ok: true });
+    }
+    if (b.action === 'photo_upload') {
+      const buf = Buffer.from(String(b.data || ''), 'base64');
+      if (buf.length < 500 || buf.length > 1.5e6 || buf[0] !== 0xff || buf[1] !== 0xd8) return res.status(400).json({ error: 'bad_image' });
+      const name = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}.jpg`, k = env('SUPABASE_SERVICE_KEY');
+      const headers = { apikey: k, 'content-type': 'image/jpeg', 'x-upsert': 'true' };
+      if (k && k.startsWith('eyJ')) headers.Authorization = `Bearer ${k}`;
+      const r = await fetch(`${env('SUPABASE_URL')}/storage/v1/object/products/${name}`, { method: 'POST', headers, body: buf });
+      if (!r.ok) { console.error('upload', r.status, await r.text()); return res.status(502).json({ error: 'upload_failed' }); }
+      return res.status(200).json({ url: `${env('SUPABASE_URL')}/storage/v1/object/public/products/${name}` });
     }
     if (b.action === 'product_delete') {
       await db(`shop_products?id=eq.${Number(b.id) | 0}`, { method: 'DELETE' }); clearShop();

@@ -126,4 +126,10 @@ Use a long password: it is the only protection.
 4. Each order lowers the stock of its products and counts the promo use.
 
 Until step 1 is done, the shop keeps using the built-in product list.
-Limits: products use drawn silhouettes (no photo upload yet), and stock is not locked, so two orders at the same second could oversell by a piece.
+
+### Second update: photos, sections, safe stock
+Run `supabase-update.sql` in the same way (after `supabase-admin.sql`). It adds:
+- the **Section** field (Dresses, Tops, Knitwear, Bottoms, Outerwear, Bags, Scarves, Hats). In the shop, choosing Women, Men or Accessories shows only the sections that have products.
+- **Photos**: in the product editor press **+ Photo** (up to 3, resized in the browser, stored in a public Supabase bucket named `products`). The first photo replaces the drawn silhouette.
+- **Safe stock**: stock is now taken in the database in one step, so two simultaneous orders cannot buy the same last piece.
+New in the shop: search, price sorting, a size guide on the product page, and "My orders" (link at the bottom of the home page). The admin Overview lists products with 5 or fewer in stock.

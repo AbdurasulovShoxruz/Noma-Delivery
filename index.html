@@ -167,6 +167,7 @@ input,select{font:inherit;color:inherit}
 .irow{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}.irow span:first-child{color:var(--mute)}
 #smap{height:200px;border-radius:var(--r);border:1px solid var(--line);margin-top:18px;overflow:hidden;position:relative;isolation:isolate}
 .hero .pill+.pill{margin-left:8px}.foot{margin-top:34px;text-align:center}
+.tools{display:flex;gap:10px;margin-top:14px}.tools .inp{border:1px solid var(--line);border-radius:999px;padding:10px 16px;font-size:14px;background:var(--card)}.tools .inp:first-child{flex:1;min-width:0}.tools select{width:auto;max-width:46%}
 .pr s{color:var(--mute);opacity:.7;margin-right:4px}.off{position:absolute;left:8px;top:8px;z-index:2;font-size:11px;background:var(--ink);color:var(--bg);border-radius:999px;padding:2px 9px}
 .promo{display:flex;gap:10px;align-items:center;margin-top:16px}.promo .inp{flex:1;text-transform:uppercase;font-size:14px}
 </style>
@@ -235,6 +236,18 @@ Object.assign(I.en,{favs:'Favourites',favEmpty:'No favourites yet',favEmptySub:'
 Object.assign(I.uz,{promo:'Promo-kod',apply:'Qo\u2018llash',badPromo:'Promo-kod topilmadi',soldOut:'Qolmagan',outOfStock:'Omborda yetarli emas'});
 Object.assign(I.ru,{promo:'Промокод',apply:'Применить',badPromo:'Промокод не найден',soldOut:'Нет в наличии',outOfStock:'Недостаточно на складе'});
 Object.assign(I.en,{promo:'Promo code',apply:'Apply',badPromo:'Promo code not found',soldOut:'Sold out',outOfStock:'Not enough in stock'});
+Object.assign(I.uz,{search:'Qidirish',sortDef:'Tavsiya',sortLow:'Narx: arzonroq',sortHigh:'Narx: qimmatroq',sizeGuide:'O\u2018lchamlar jadvali',chest:'Ko\u2018krak (sm)',waist:'Bel (sm)',myOrders:'Buyurtmalarim',noOrders:'Hozircha buyurtma yo\u2018q',noFound:'Hech narsa topilmadi',
+ st_new:'Yangi',st_accepted:'Qabul qilindi',st_on_way:'Yo\u2018lda',st_delivered:'Yetkazildi',st_cancelled:'Bekor qilindi',
+ dresses:'Ko\u2018ylaklar',tops:'Ustki kiyim',knitwear:'Trikotaj',bottoms:'Pastki kiyim',outerwear:'Ustki qatlam',bags:'Sumkalar',scarves:'Sharflar',hats:'Bosh kiyim'});
+Object.assign(I.ru,{search:'Поиск',sortDef:'Рекомендуемые',sortLow:'Цена: по возрастанию',sortHigh:'Цена: по убыванию',sizeGuide:'Таблица размеров',chest:'Грудь (см)',waist:'Талия (см)',myOrders:'Мои заказы',noOrders:'Заказов пока нет',noFound:'Ничего не найдено',
+ st_new:'Новый',st_accepted:'Принят',st_on_way:'В пути',st_delivered:'Доставлен',st_cancelled:'Отменён',
+ dresses:'Платья',tops:'Верх',knitwear:'Трикотаж',bottoms:'Низ',outerwear:'Верхняя одежда',bags:'Сумки',scarves:'Шарфы',hats:'Головные уборы'});
+Object.assign(I.en,{search:'Search',sortDef:'Featured',sortLow:'Price: low to high',sortHigh:'Price: high to low',sizeGuide:'Size guide',chest:'Chest (cm)',waist:'Waist (cm)',myOrders:'My orders',noOrders:'No orders yet',noFound:'Nothing found',
+ st_new:'New',st_accepted:'Accepted',st_on_way:'On the way',st_delivered:'Delivered',st_cancelled:'Cancelled',
+ dresses:'Dresses',tops:'Tops',knitwear:'Knitwear',bottoms:'Bottoms',outerwear:'Outerwear',bags:'Bags',scarves:'Scarves',hats:'Hats'});
+const SUBOF={dress:'dresses',tee:'tops',shirt:'tops',hoodie:'knitwear',knit:'knitwear',trousers:'bottoms',shorts:'bottoms',skirt:'bottoms',coat:'outerwear',tote:'bags',scarf:'scarves',cap:'hats'};
+const subOf=p=>p.sub||SUBOF[p.art]||'tops';
+const SIZES=[['XS',84,66],['S',88,70],['M',92,74],['L',98,80],['XL',104,86]];
 const STORE={phone:'+998977775437',lat:41.3111,lon:69.2797};
 const CUR = {en:"so\u2019m",ru:"сум",uz:"so\u2019m"};
 Object.assign(I.uz,{
@@ -307,6 +320,7 @@ const SHAPES = {
  cap:`<path d="M16 76Q14 34 50 32Q86 34 84 76L98 82Q76 90 48 86 30 84 16 78Z"/><path class="ln" d="M50 32V84"/>`
 };
 function art(p, hex){
+  if(p.photos&&p.photos.length) return `<img src="${p.photos[0]}" alt="" loading="lazy">`;
   const c = hex || p.colors[0];
   return `<svg viewBox="0 0 100 125" xmlns="http://www.w3.org/2000/svg"><g fill="${c}" stroke="rgba(24,24,24,.35)" stroke-width="1" stroke-linejoin="round">${SHAPES[p.art]}</g>
   <style>.ln{fill:none;stroke:rgba(24,24,24,.35);stroke-width:1;stroke-linecap:round}</style></svg>`;
@@ -321,7 +335,7 @@ const S = {
   co:{name:(tgUser&&[tgUser.first_name,tgUser.last_name].filter(Boolean).join(' '))||'',phone:'',type:'courier',district:'',address:'',pay:'cash',lat:null,lon:null,pin:false},
   favs:(()=>{ try{ return JSON.parse(localStorage.getItem('noma_favs')||'[]'); }catch(e){ return []; } })(),
   theme:(()=>{ try{ const s=localStorage.getItem('noma_theme'); if(s==='dark'||s==='light') return s; }catch(e){} return (tg&&tg.colorScheme)||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'); })(),
-  promo:null, err:{}, order:null, live:false, verified:false, phone:'', bot:'', demoNote:false, busy:false, addrAuto:true, verifyMsg:'', map:null
+  promo:null, q:'', sort:'def', sub:'all', myOrders:null, err:{}, order:null, live:false, verified:false, phone:'', bot:'', demoNote:false, busy:false, addrAuto:true, verifyMsg:'', map:null
 };
 const t = k => (I[S.lang][k] ?? I.uz[k] ?? k);
 const $ = s => document.querySelector(s);
@@ -361,13 +375,14 @@ function card(p){
   </div>`;
 }
 function home(){
-  const list = P.filter(p=>S.cat==='all'||p.cat===S.cat);
   return `<section class="hero"><div class="kicker">${t('kicker')}</div><h1>${t('heroTitle')}</h1><p>${t('heroSub')}</p>
     <button class="pill" data-a="shop">${t('shopNow')}</button><button class="pill ghost" data-a="store">${t('ourStore')}</button></section>
     <div class="chips" id="shop">${['all','women','men','accessories'].map(c=>`<button class="chip ${S.cat===c?'on':''}" data-a="cat" data-v="${c}">${t(c)}</button>`).join('')}</div>
-    <div class="grid">${list.map(card).join('')}</div>
+    ${S.cat!=='all'?`<div class="chips" style="padding-top:2px">${['all',...new Set(P.filter(p=>p.cat===S.cat).map(subOf))].map(c=>`<button class="chip ${S.sub===c?'on':''}" data-a="sub" data-v="${c}">${t(c)}</button>`).join('')}</div>`:''}
+    <div class="tools"><input class="inp" id="f-q" placeholder="${t('search')}" value="${S.q.replace(/"/g,'&quot;')}"><select class="inp" id="f-sort">${[['def','sortDef'],['low','sortLow'],['high','sortHigh']].map(([k,l])=>`<option value="${k}" ${S.sort===k?'selected':''}>${t(l)}</option>`).join('')}</select></div>
+    <div class="grid" id="grid">${gridHtml()}</div>
     <p class="muted" style="text-align:center;margin:36px 0 0;font-size:12px">${t('freeOver')} ${fmt(FREE_OVER)}</p>
-    <div class="foot"><button class="link" data-a="store">${t('ourStore')} · ${t('since')}</button></div>`;
+    <div class="foot"><button class="link" data-a="store">${t('ourStore')} · ${t('since')}</button>${S.live?` &nbsp;·&nbsp; <button class="link" data-a="orders">${t('myOrders')}</button>`:''}</div>`;
 }
 function favsView(){
   const list=S.favs.map(pById).filter(Boolean);
@@ -394,6 +409,24 @@ function initStoreMap(){
   L.circleMarker([STORE.lat,STORE.lon],{radius:9,color:'#181818',weight:3,fillColor:'#fff',fillOpacity:1}).addTo(map);
   S.map=map;
 }
+function gridHtml(){
+  const q=S.q.trim().toLowerCase();
+  let L=P.filter(p=>(S.cat==='all'||p.cat===S.cat)&&(S.sub==='all'||S.cat==='all'||subOf(p)===S.sub)&&(!q||Object.values(p.name).some(n=>String(n).toLowerCase().includes(q))));
+  if(S.sort==='low') L=[...L].sort((a,b)=>a.price-b.price); else if(S.sort==='high') L=[...L].sort((a,b)=>b.price-a.price);
+  return L.length?L.map(card).join(''):`<p class="muted" style="grid-column:1/-1;text-align:center;padding:30px 0">${t('noFound')}</p>`;
+}
+function sizesView(){
+  return `<div class="backrow"><button class="link" data-a="back">\u2190 ${t('back')}</button></div><h2 style="font-family:var(--serif);font-weight:500;font-size:34px;margin:0 0 14px">${t('sizeGuide')}</h2>
+  <div class="irow" style="color:var(--mute)"><b style="font-weight:400;width:60px">${t('size')}</b><span style="flex:1;text-align:center">${t('chest')}</span><span style="width:90px;text-align:right">${t('waist')}</span></div>
+  ${SIZES.map(([n,c,w])=>`<div class="irow"><b style="font-weight:500;width:60px">${n}</b><span style="flex:1;text-align:center;color:var(--ink)">${c}</span><span style="width:90px;text-align:right;color:var(--ink)">${w}</span></div>`).join('')}`;
+}
+function ordersView(){
+  const L=S.myOrders||[];
+  const head=`<div class="backrow"><button class="link" data-a="back">\u2190 ${t('back')}</button></div><h2 style="font-family:var(--serif);font-weight:500;font-size:34px;margin:0">${t('myOrders')}</h2>`;
+  if(!L.length) return head+`<div class="empty"><p class="muted">${t('noOrders')}</p><button class="pill" data-a="home">${t('continue')}</button></div>`;
+  return head+L.map(o=>`<div class="irow" style="flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between"><b style="font-weight:500">${o.no}</b><span>${t('st_'+o.status)}</span></div>
+   <div class="muted small">${new Date(o.at).toLocaleDateString(S.lang==='ru'?'ru-RU':'en-GB')} \u00B7 ${fmt(o.total)}</div><div style="color:var(--ink);font-size:13px">${o.items.map(l=>`${l.qty} \u00D7 ${l.name}${l.size?' ('+l.size+')':''}`).join(', ')}</div></div>`).join('');
+}
 function pdp(){
   const p = pById(S.pid); const c = p.colors[S.sel.color];
   return `<div class="backrow"><button class="link" data-a="back">\u2190 ${t('back')}</button></div>
@@ -401,6 +434,7 @@ function pdp(){
   <h2>${p.name[S.lang]}</h2><div class="price">${p.old?`<s class="muted">${fmt(p.old)}</s> `:''}${fmt(p.price)}</div>
   <div class="label">${t('color')}</div><div class="opts">${p.colors.map((h,i)=>`<button class="sw ${S.sel.color===i?'on':''}" style="background:${h}" data-a="color" data-v="${i}" aria-label="${h}"></button>`).join('')}</div>
   <div class="label">${t('size')}</div><div class="opts">${p.sizes?p.sizes.map(s=>`<button class="opt ${S.sel.size===s?'on':''}" data-a="size" data-v="${s}">${s}</button>`).join(''):`<button class="opt on">${t('oneSize')}</button>`}</div>
+  ${p.sizes?`<button class="link" data-a="sizes" style="margin-top:10px;text-decoration:underline">${t('sizeGuide')}</button>`:''}
   <div class="label">${t('material')}</div><div>${I[S.lang].skuMaterial[p.mat]}</div>
   <p class="muted" style="margin-top:18px">${t('desc')}</p></div>
   <div class="dock">${p.stock===0?`<button class="pill full" disabled>${t('soldOut')}</button>`:`<button class="pill full" data-a="addpdp">${t('addToBag')} \u00B7 ${fmt(p.price)}</button>`}</div>`;
@@ -501,7 +535,7 @@ function render(){
   topbar();
   const v=curView();
   if(S.map){ try{ S.map.remove(); }catch(e){} S.map=null; }
-  const body = v==='verify'?verifyView(): v==='home'?home(): v==='pdp'?pdp(): v==='bag'?bagView(): v==='favs'?favsView(): v==='store'?storeView(): v==='checkout'?checkout(): done();
+  const body = v==='verify'?verifyView(): v==='home'?home(): v==='pdp'?pdp(): v==='bag'?bagView(): v==='favs'?favsView(): v==='sizes'?sizesView(): v==='orders'?ordersView(): v==='store'?storeView(): v==='checkout'?checkout(): done();
   $('#app').innerHTML = (S.demoNote?`<div class="banner">${t('demoBanner')}</div>`:'') + body;
   if(tg){
     try{ if(S.nav.length>1 && v!=='done' && v!=='verify') tg.BackButton.show(); else tg.BackButton.hide(); }catch(e){}
@@ -570,7 +604,7 @@ async function loadShop(){
     const r=await fetch('/api/shop'), j=await r.json();
     if(j.products && j.products.length){
       P.length=0;
-      j.products.forEach(x=>P.push({id:x.id,cat:x.cat,art:x.art,mat:x.mat,price:x.price,old:x.old,stock:x.stock,sizes:x.sizes,colors:x.colors,name:{uz:x.name.uz,ru:x.name.ru,en:x.name.uz}}));
+      j.products.forEach(x=>P.push({id:x.id,cat:x.cat,art:x.art,mat:x.mat,price:x.price,old:x.old,stock:x.stock,sub:x.sub,photos:x.photos,sizes:x.sizes,colors:x.colors,name:{uz:x.name.uz,ru:x.name.ru,en:x.name.uz}}));
       S.bag=S.bag.filter(l=>pById(l.id)); save();
     }
   }catch(e){}
@@ -680,7 +714,10 @@ document.addEventListener('click',ev=>{
   const a=b.dataset.a, v=b.dataset.v;
   switch(a){
     case 'lang': S.lang=v; try{localStorage.setItem('noma_lang',v);}catch(e){} render(); if(S.sheet) drawSheet(); break;
-    case 'cat': S.cat=v; render(); break;
+    case 'cat': S.cat=v; S.sub='all'; render(); break;
+    case 'sub': S.sub=v; render(); break;
+    case 'sizes': go('sizes'); break;
+    case 'orders': api('/api/orders',{initData:tg.initData}).then(r=>{ S.myOrders=r.orders; go('orders'); }).catch(()=>toast(t('errGeneric'))); break;
     case 'shop': document.getElementById('shop').scrollIntoView({behavior:'smooth'}); break;
     case 'open': S.pid=+v; S.sel={size:null,color:0}; haptic(); go('pdp'); break;
     case 'quick': openSheet(+v); break;
@@ -712,6 +749,8 @@ document.addEventListener('click',ev=>{
   }
 });
 $('#bagbtn').addEventListener('click',()=>{ const v=curView(); if(v!=='verify'&&v!=='bag'&&v!=='checkout'&&v!=='done'){ closeSheet(); go('bag'); } });
+document.addEventListener('input',ev=>{ if(ev.target.id==='f-q'){ S.q=ev.target.value; const g=$('#grid'); if(g) g.innerHTML=gridHtml(); } });
+document.addEventListener('change',ev=>{ if(ev.target.id==='f-sort'){ S.sort=ev.target.value; const g=$('#grid'); if(g) g.innerHTML=gridHtml(); } });
 $('#themebtn').addEventListener('click',()=>{ S.theme=S.theme==='dark'?'light':'dark'; try{localStorage.setItem('noma_theme',S.theme);}catch(e){} applyTheme(); haptic(); });
 $('#favbtn').addEventListener('click',()=>{ const v=curView(); if(v!=='verify'&&v!=='favs'&&v!=='checkout'&&v!=='done'){ closeSheet(); go('favs'); } });
 $('#logo').addEventListener('click',()=>{ S.nav=['home']; closeSheet(); render(); window.scrollTo(0,0); });

@@ -47,7 +47,22 @@ module.exports = async (req, res) => {
     const name = clean(b.name, 60) || customer.first_name || '—';
     const lang = b.lang === 'ru' ? 'ru' : 'uz';
 
-    const order = await insertOrder({
+    const sold = {};
+    priced.lines.forEach((l) => { sold[l.id] = (sold[l.id] || 0) + l.qty; });
+    const taken = [];
+    const release = () => Promise.all(taken.map((id) => db('rpc/give_stock', { method: 'POST', body: { pid: Number(id), q: sold[id] } }).catch(() => {})));
+    if (shop) {
+      for (const id of Object.keys(sold)) {
+        if (!cat[id] || cat[id].stock == null) continue;
+        let ok = false;
+        try { ok = (await db('rpc/take_stock', { method: 'POST', body: { pid: Number(id), q: sold[id] } })) === true; } catch (e) { console.error('take_stock', e.message); }
+        if (!ok) { await release(); return res.status(400).json({ error: 'out_of_stock' }); }
+        taken.push(id);
+      }
+    }
+    let order;
+    try {
+      order = await insertOrder({
       telegram_id: user.id,
       name,
       phone: customer.phone, // always the verified number, never one sent by the browser
@@ -61,17 +76,12 @@ module.exports = async (req, res) => {
       status: 'new',
       lang,
     });
+    } catch (e) { await release(); throw e; }
 
-    try { // take the sold pieces out of stock, count the promo use
-      const sold = {};
-      priced.lines.forEach((l) => { sold[l.id] = (sold[l.id] || 0) + l.qty; });
-      for (const id of Object.keys(sold)) {
-        const st = cat[id] && cat[id].stock;
-        if (shop && st != null) await db(`shop_products?id=eq.${Number(id)}`, { method: 'PATCH', body: { stock: Math.max(0, st - sold[id]) } });
-      }
+    try { // count the promo use
       if (promo) { const u = (await db(`promos?code=eq.${promo}&select=used`))[0]; await db(`promos?code=eq.${promo}`, { method: 'PATCH', body: { used: ((u && u.used) || 0) + 1 } }); }
       clearShop();
-    } catch (e) { console.error('stock', e.message); }
+    } catch (e) { console.error('promo', e.message); }
 
     if (env('STAFF_CHAT_ID')) {
       const m = await tg('sendMessage', {
