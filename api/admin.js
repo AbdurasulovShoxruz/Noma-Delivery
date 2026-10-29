@@ -63,7 +63,11 @@ module.exports = async (req, res) => {
       if (!name.uz || !name.ru || price === null || sale === null || (p.stock !== null && p.stock !== '' && p.stock !== undefined && stock === null) ||
           !colors.length || !CATS.includes(p.cat) || !ARTS.includes(p.art) || !MATS.includes(p.mat)) return res.status(400).json({ error: 'bad_product' });
       const base = `${env('SUPABASE_URL')}/storage/v1/object/public/products/`;
-      const photos = (Array.isArray(p.photos) ? p.photos : []).filter((u) => typeof u === 'string' && u.startsWith(base)).slice(0, 3);
+      const photos = (Array.isArray(p.photos) ? p.photos : [])
+        .map((x) => (typeof x === 'string' ? { u: x, c: null } : x))
+        .filter((x) => x && typeof x.u === 'string' && x.u.startsWith(base))
+        .map((x) => ({ u: x.u, c: colors.includes(x.c) ? x.c : null }))   // colour tag must be one of the product's colours
+        .slice(0, 6);
       const kind = p.sizes === 'shoes' ? SH : p.sizes === 'clothing' || p.sizes === true ? CL : null;
       let size_stock = null;
       if (kind && p.size_stock && typeof p.size_stock === 'object') {

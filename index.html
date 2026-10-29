@@ -162,6 +162,13 @@ input,select{font:inherit;color:inherit}
 .hrt{position:absolute;top:6px;right:6px;width:34px;height:34px;border-radius:50%;background:color-mix(in srgb,var(--bg) 80%,transparent);display:grid;place-items:center;z-index:2}
 .hrt svg{width:18px;height:18px}.hrt.on svg{fill:var(--ink)}
 .card{position:relative}.pdp .art{position:relative}
+.gal{display:block}
+.gtrack{display:flex;width:100%;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.gtrack::-webkit-scrollbar{display:none}
+.gtrack img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:center;scroll-snap-stop:always;user-select:none;-webkit-user-drag:none}
+.gdots{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:6px;z-index:2;pointer-events:none}
+.gdots button{pointer-events:auto;width:7px;height:7px;padding:0;border-radius:50%;background:color-mix(in srgb,var(--bg) 70%,transparent);border:1px solid color-mix(in srgb,var(--ink) 35%,transparent);transition:width .2s,background .2s}
+.gdots button.on{width:20px;border-radius:4px;background:var(--ink);border-color:var(--ink)}
 .ship{margin:14px 0 4px;font-size:13px}.bar{height:3px;background:var(--line);border-radius:2px;margin-top:8px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ink)}
 .ltot{font-size:13px;color:var(--mute)}.row{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
 .irow{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}.irow span:first-child{color:var(--mute)}
@@ -331,8 +338,23 @@ const SHAPES = {
  scarf:`<path d="M36 12H64L68 46H61V106H47V46H32Z"/><path class="ln" d="M49 106V114M54 106V114M59 106V114"/>`,
  cap:`<path d="M16 76Q14 34 50 32Q86 34 84 76L98 82Q76 90 48 86 30 84 16 78Z"/><path class="ln" d="M50 32V84"/>`
 };
+/* Photos can be plain URLs (older products) or {u, c}: c = colour hex the photo belongs to (empty = all colours). */
+function pphotos(p){ return (p.photos||[]).map(x=>typeof x==='string'?{u:x,c:null}:x).filter(x=>x&&x.u); }
+/* Photos to show for one colour: that colour's photos first, then the untagged ones. If none match, show all. */
+function colorPhotos(p, hex){
+  const a=pphotos(p); if(!a.length) return [];
+  const r=[...a.filter(x=>x.c&&x.c===hex), ...a.filter(x=>!x.c)];
+  return r.length?r:a;
+}
+function gallery(p, hex){
+  const ph=colorPhotos(p,hex);
+  if(ph.length<2) return art(p,hex);
+  return `<div class="gtrack" id="gtrack">${ph.map(x=>`<img src="${x.u}" alt="" draggable="false">`).join('')}</div>
+  <div class="gdots" id="gdots">${ph.map((x,i)=>`<button class="${i?'':'on'}" data-a="gal" data-v="${i}" aria-label="${i+1}"></button>`).join('')}</div>`;
+}
 function art(p, hex){
-  if(p.photos&&p.photos.length) return `<img src="${p.photos[0]}" alt="" loading="lazy">`;
+  const cp=colorPhotos(p, hex||p.colors[0]);
+  if(cp.length) return `<img src="${cp[0].u}" alt="" loading="lazy">`;
   const c = hex || p.colors[0];
   return `<svg viewBox="0 0 100 125" xmlns="http://www.w3.org/2000/svg"><g fill="${c}" stroke="rgba(24,24,24,.35)" stroke-width="1" stroke-linejoin="round">${SHAPES[p.art]}</g>
   <style>.ln{fill:none;stroke:rgba(24,24,24,.35);stroke-width:1;stroke-linecap:round}</style></svg>`;
@@ -442,7 +464,7 @@ function ordersView(){
 function pdp(){
   const p = pById(S.pid); const c = p.colors[S.sel.color];
   return `<div class="backrow"><button class="link" data-a="back">\u2190 ${t('back')}</button></div>
-  <div class="pdp"><div class="art">${heart(p.id)}${art(p,c)}</div>
+  <div class="pdp"><div class="art gal">${heart(p.id)}${gallery(p,c)}</div>
   <h2>${p.name[S.lang]}</h2><div class="price">${p.old?`<s class="muted">${fmt(p.old)}</s> `:''}${fmt(p.price)}</div>
   <div class="label">${t('color')}</div><div class="opts">${p.colors.map((h,i)=>`<button class="sw ${S.sel.color===i?'on':''}" style="background:${h}" data-a="color" data-v="${i}" aria-label="${h}"></button>`).join('')}</div>
   <div class="label">${t('size')}</div><div class="opts">${p.sizes?p.sizes.map(s=>`<button class="opt ${S.sel.size===s?'on':''}" ${sOut(p,s)?'disabled':''} data-a="size" data-v="${s}">${s}</button>`).join(''):`<button class="opt on">${t('oneSize')}</button>`}</div>
@@ -737,6 +759,7 @@ document.addEventListener('click',ev=>{
     case 'scolor': S.sheet.color=+v; drawSheet(); break;
     case 'ssize': S.sheet.size=v; drawSheet(); break;
     case 'sadd': { const p=pById(S.sheet.id); addLine(p.id,p.sizes?S.sheet.size:null,S.sheet.color); closeSheet(); break; }
+    case 'gal': { const tr=document.getElementById('gtrack'); if(tr) tr.scrollTo({left:tr.clientWidth*(+v),behavior:'smooth'}); break; }
     case 'color': S.sel.color=+v; render(); break;
     case 'size': S.sel.size=v; render(); break;
     case 'addpdp': { const p=pById(S.pid); if(p.sizes&&!S.sel.size){ toast(t('size')+'?'); haptic('heavy'); break; } addLine(p.id,p.sizes?S.sel.size:null,S.sel.color); break; }
@@ -761,6 +784,12 @@ document.addEventListener('click',ev=>{
     case 'place': place(); break;
   }
 });
+/* Carousel: keep the dots in step with the swipe (scroll events do not bubble, so listen in capture mode). */
+document.addEventListener('scroll',ev=>{
+  const tr=ev.target; if(!tr||tr.id!=='gtrack') return;
+  const i=Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth));
+  document.querySelectorAll('#gdots button').forEach((d,k)=>d.classList.toggle('on',k===i));
+},true);
 $('#bagbtn').addEventListener('click',()=>{ const v=curView(); if(v!=='verify'&&v!=='bag'&&v!=='checkout'&&v!=='done'){ closeSheet(); go('bag'); } });
 document.addEventListener('input',ev=>{ if(ev.target.id==='f-q'){ S.q=ev.target.value; const g=$('#grid'); if(g) g.innerHTML=gridHtml(); } });
 document.addEventListener('change',ev=>{ if(ev.target.id==='f-sort'){ S.sort=ev.target.value; const g=$('#grid'); if(g) g.innerHTML=gridHtml(); } });
