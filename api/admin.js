@@ -67,7 +67,7 @@ module.exports = async (req, res) => {
         .map((x) => (typeof x === 'string' ? { u: x, c: null } : x))
         .filter((x) => x && typeof x.u === 'string' && x.u.startsWith(base))
         .map((x) => ({ u: x.u, c: colors.includes(x.c) ? x.c : null }))   // colour tag must be one of the product's colours
-        .slice(0, 6);
+        .slice(0, 12);
       const kind = p.sizes === 'shoes' ? SH : p.sizes === 'clothing' || p.sizes === true ? CL : null;
       let size_stock = null;
       if (kind && p.size_stock && typeof p.size_stock === 'object') {
