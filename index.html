@@ -167,6 +167,8 @@ input,select{font:inherit;color:inherit}
 .irow{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}.irow span:first-child{color:var(--mute)}
 #smap{height:200px;border-radius:var(--r);border:1px solid var(--line);margin-top:18px;overflow:hidden;position:relative;isolation:isolate}
 .hero .pill+.pill{margin-left:8px}.foot{margin-top:34px;text-align:center}
+.pr s{color:var(--mute);opacity:.7;margin-right:4px}.off{position:absolute;left:8px;top:8px;z-index:2;font-size:11px;background:var(--ink);color:var(--bg);border-radius:999px;padding:2px 9px}
+.promo{display:flex;gap:10px;align-items:center;margin-top:16px}.promo .inp{flex:1;text-transform:uppercase;font-size:14px}
 </style>
 </head>
 <body>
@@ -230,6 +232,9 @@ uz:{shop:'Do\u2019kon',bag:'Savat',quickBag:'Savatga',addToBag:'Savatga qo\u2018
 Object.assign(I.uz,{favs:'Sevimlilar',favEmpty:'Sevimlilar bo\u2018sh',favEmptySub:'Yurak belgisini bosib saqlang.',store:'Do\u2018kon',ourStore:'Do\u2018konimiz',since:'2020-yildan beri',address:'Manzil',hours:'Ish vaqti',call:'Qo\u2018ng\u2018iroq qilish',openMap:'Xaritada ochish',storeAddr:'Amir Temur ko\u2018chasi 15, Toshkent',storeHours:'Har kuni 10:00 \u2013 22:00',storeAbout:'NOMA 2020-yildan beri Toshkentda tabiiy matolardan sokin kiyimlar tikadi.',freeLeft:'Bepul yetkazish uchun yana',freeOk:'Bepul yetkazish ochildi',saveFav:'Sevimlilarga',lineTotal:'Jami',theme:'Mavzu'});
 Object.assign(I.ru,{favs:'Избранное',favEmpty:'В избранном пусто',favEmptySub:'Нажмите на сердце, чтобы сохранить.',store:'Магазин',ourStore:'Наш магазин',since:'С 2020 года',address:'Адрес',hours:'Часы работы',call:'Позвонить',openMap:'Открыть на карте',storeAddr:'ул. Амира Темура 15, Ташкент',storeHours:'Ежедневно 10:00 \u2013 22:00',storeAbout:'NOMA с 2020 года шьёт спокойную одежду из натуральных тканей в Ташкенте.',freeLeft:'До бесплатной доставки',freeOk:'Бесплатная доставка включена',saveFav:'В избранное',lineTotal:'Сумма',theme:'Тема'});
 Object.assign(I.en,{favs:'Favourites',favEmpty:'No favourites yet',favEmptySub:'Tap the heart to save items.',store:'Store',ourStore:'Our store',since:'Since 2020',address:'Address',hours:'Opening hours',call:'Call us',openMap:'Open in maps',storeAddr:'Amir Temur street 15, Tashkent',storeHours:'Daily 10:00 \u2013 22:00',storeAbout:'Since 2020 NOMA has made quiet clothes from natural fabrics in Tashkent.',freeLeft:'Left for free delivery',freeOk:'Free delivery unlocked',saveFav:'Save',lineTotal:'Total',theme:'Theme'});
+Object.assign(I.uz,{promo:'Promo-kod',apply:'Qo\u2018llash',badPromo:'Promo-kod topilmadi',soldOut:'Qolmagan',outOfStock:'Omborda yetarli emas'});
+Object.assign(I.ru,{promo:'Промокод',apply:'Применить',badPromo:'Промокод не найден',soldOut:'Нет в наличии',outOfStock:'Недостаточно на складе'});
+Object.assign(I.en,{promo:'Promo code',apply:'Apply',badPromo:'Promo code not found',soldOut:'Sold out',outOfStock:'Not enough in stock'});
 const STORE={phone:'+998977775437',lat:41.3111,lon:69.2797};
 const CUR = {en:"so\u2019m",ru:"сум",uz:"so\u2019m"};
 Object.assign(I.uz,{
@@ -316,7 +321,7 @@ const S = {
   co:{name:(tgUser&&[tgUser.first_name,tgUser.last_name].filter(Boolean).join(' '))||'',phone:'',type:'courier',district:'',address:'',pay:'cash',lat:null,lon:null,pin:false},
   favs:(()=>{ try{ return JSON.parse(localStorage.getItem('noma_favs')||'[]'); }catch(e){ return []; } })(),
   theme:(()=>{ try{ const s=localStorage.getItem('noma_theme'); if(s==='dark'||s==='light') return s; }catch(e){} return (tg&&tg.colorScheme)||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'); })(),
-  err:{}, order:null, live:false, verified:false, phone:'', bot:'', demoNote:false, busy:false, addrAuto:true, verifyMsg:'', map:null
+  promo:null, err:{}, order:null, live:false, verified:false, phone:'', bot:'', demoNote:false, busy:false, addrAuto:true, verifyMsg:'', map:null
 };
 const t = k => (I[S.lang][k] ?? I.uz[k] ?? k);
 const $ = s => document.querySelector(s);
@@ -325,6 +330,7 @@ const pById = id => P.find(p=>p.id===id);
 const save = () => { try{ localStorage.setItem('noma_bag',JSON.stringify(S.bag)); }catch(e){} };
 const count = () => S.bag.reduce((a,b)=>a+b.qty,0);
 const subtotal = () => S.bag.reduce((a,b)=>a+pById(b.id).price*b.qty,0);
+const disc = () => S.promo ? Math.round(subtotal()*S.promo.percent/100) : 0;
 const shipFee = () => S.co.type==='pickup' || subtotal()>=FREE_OVER || !S.bag.length ? 0 : DELIVERY_FEE;
 const view = () => S.nav[S.nav.length-1];
 function applyTheme(){
@@ -349,9 +355,9 @@ function topbar(){
 }
 function card(p){
   return `<div class="card">
-    ${heart(p.id)}<button class="art" data-a="open" data-v="${p.id}" aria-label="${p.name[S.lang]}">${art(p)}</button>
-    <div class="nm">${p.name[S.lang]}</div><div class="pr">${fmt(p.price)}</div>
-    <button class="pill sm" data-a="quick" data-v="${p.id}">${t('quickBag')}</button>
+    ${p.old?`<span class="off">\u2212${Math.round(100-p.price/p.old*100)}%</span>`:''}${heart(p.id)}<button class="art" data-a="open" data-v="${p.id}" aria-label="${p.name[S.lang]}">${art(p)}</button>
+    <div class="nm">${p.name[S.lang]}</div><div class="pr">${p.old?`<s>${fmt(p.old)}</s>`:''}${fmt(p.price)}</div>
+    ${p.stock===0?`<button class="pill sm" disabled>${t('soldOut')}</button>`:`<button class="pill sm" data-a="quick" data-v="${p.id}">${t('quickBag')}</button>`}
   </div>`;
 }
 function home(){
@@ -392,12 +398,12 @@ function pdp(){
   const p = pById(S.pid); const c = p.colors[S.sel.color];
   return `<div class="backrow"><button class="link" data-a="back">\u2190 ${t('back')}</button></div>
   <div class="pdp"><div class="art">${heart(p.id)}${art(p,c)}</div>
-  <h2>${p.name[S.lang]}</h2><div class="price">${fmt(p.price)}</div>
+  <h2>${p.name[S.lang]}</h2><div class="price">${p.old?`<s class="muted">${fmt(p.old)}</s> `:''}${fmt(p.price)}</div>
   <div class="label">${t('color')}</div><div class="opts">${p.colors.map((h,i)=>`<button class="sw ${S.sel.color===i?'on':''}" style="background:${h}" data-a="color" data-v="${i}" aria-label="${h}"></button>`).join('')}</div>
   <div class="label">${t('size')}</div><div class="opts">${p.sizes?p.sizes.map(s=>`<button class="opt ${S.sel.size===s?'on':''}" data-a="size" data-v="${s}">${s}</button>`).join(''):`<button class="opt on">${t('oneSize')}</button>`}</div>
   <div class="label">${t('material')}</div><div>${I[S.lang].skuMaterial[p.mat]}</div>
   <p class="muted" style="margin-top:18px">${t('desc')}</p></div>
-  <div class="dock"><button class="pill full" data-a="addpdp">${t('addToBag')} \u00B7 ${fmt(p.price)}</button></div>`;
+  <div class="dock">${p.stock===0?`<button class="pill full" disabled>${t('soldOut')}</button>`:`<button class="pill full" data-a="addpdp">${t('addToBag')} \u00B7 ${fmt(p.price)}</button>`}</div>`;
 }
 function bagView(){
   if(!S.bag.length) return `<div class="empty"><h2>${t('empty')}</h2><p class="muted">${t('emptySub')}</p><button class="pill" data-a="home">${t('continue')}</button></div>`;
@@ -410,9 +416,10 @@ function bagView(){
    ${l.qty>1?`<div class="ltot">${t('lineTotal')}: ${fmt(p.price*l.qty)}</div>`:''}
    <div class="qty"><button data-a="dec" data-v="${i}">\u2212</button><span>${l.qty}</span><button data-a="inc" data-v="${i}">+</button></div></div>
    <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end"><button class="link" data-a="del" data-v="${i}">${t('remove')}</button>${isFav(p.id)?'':`<button class="link" data-a="favline" data-v="${p.id}">\u2661 ${t('saveFav')}</button>`}</div></div>`}).join('')}
+  ${S.live?`<div class="promo">${S.promo?`<span style="flex:1">\u2713 ${S.promo.code} \u2212${S.promo.percent}%</span><button class="link" data-a="rmpromo">${t('remove')}</button>`:`<input class="inp" id="f-promo" placeholder="${t('promo')}" autocapitalize="characters" maxlength="20"><button class="pill sm" data-a="applypromo">${t('apply')}</button>`}</div>`:''}
   <div class="sum"><div><span class="muted">${t('subtotal')}</span><span>${fmt(sub)}</span></div>
   <div><span class="muted">${t('delivery')}</span><span>${S.co.type==='pickup'||!fee?t('free'):fmt(fee)}</span></div>
-  <div class="tot"><span>${t('total')}</span><span>${fmt(sub+fee)}</span></div></div>
+  ${disc()?`<div><span class="muted">${S.promo.code} \u2212${S.promo.percent}%</span><span>\u2212${fmt(disc())}</span></div>`:''}<div class="tot"><span>${t('total')}</span><span>${fmt(sub-disc()+fee)}</span></div></div>
   <div class="dock"><button class="pill full" data-a="tocheckout">${t('checkout')}</button></div>`;
 }
 function checkout(){
@@ -443,8 +450,8 @@ function checkout(){
     ${c.pay==='online'?`<p class="muted" style="font-size:12px;margin:10px 0 0">${t('payNote')}</p>`:''}</div>
   <div class="sum"><div><span class="muted">${t('subtotal')}</span><span>${fmt(sub)}</span></div>
   <div><span class="muted">${t('delivery')}</span><span>${!fee?t('free'):fmt(fee)}</span></div>
-  <div class="tot"><span>${t('total')}</span><span>${fmt(sub+fee)}</span></div></div>
-  <div class="dock"><button class="pill full" data-a="place" ${S.busy?'disabled':''}>${S.busy?t('sending'):`${t('placeOrder')} · ${fmt(sub+fee)}`}</button></div>`;
+  ${disc()?`<div><span class="muted">${S.promo.code} \u2212${S.promo.percent}%</span><span>\u2212${fmt(disc())}</span></div>`:''}<div class="tot"><span>${t('total')}</span><span>${fmt(sub-disc()+fee)}</span></div></div>
+  <div class="dock"><button class="pill full" data-a="place" ${S.busy?'disabled':''}>${S.busy?t('sending'):`${t('placeOrder')} · ${fmt(sub-disc()+fee)}`}</button></div>`;
 }
 function done(){
   const o=S.order;
@@ -532,15 +539,16 @@ async function place(){
     try{
       const r=await api('/api/order',{initData:tg.initData,
         items:S.bag.map(l=>({id:l.id,size:l.size,color:l.color,qty:l.qty})),
-        type:c.type,lat:c.lat,lon:c.lon,address:c.address.trim(),pay:c.pay,name:c.name.trim(),lang:S.lang});
+        type:c.type,promo:S.promo?S.promo.code:undefined,lat:c.lat,lon:c.lon,address:c.address.trim(),pay:c.pay,name:c.name.trim(),lang:S.lang});
       S.order={live:true,no:r.no,total:r.total};
-      S.bag=[]; save(); S.busy=false; S.nav=['home','done']; render(); window.scrollTo(0,0);
+      S.bag=[]; S.promo=null; save(); S.busy=false; S.nav=['home','done']; render(); window.scrollTo(0,0);
       try{ tg.HapticFeedback.notificationOccurred('success'); }catch(x){}
     }catch(err){
       S.busy=false;
       const code=err.json&&err.json.error;
       if(code==='not_verified'){ S.verified=false; S.nav=['verify']; render(); return; }
-      render(); toast(code==='outside_zone'?t('outsideZone'):t('errGeneric'));
+      if(code==='bad_promo') S.promo=null;
+      render(); toast(code==='outside_zone'?t('outsideZone'):code==='out_of_stock'?t('outOfStock'):code==='bad_promo'?t('badPromo'):t('errGeneric'));
     }
     return;
   }
@@ -557,7 +565,18 @@ async function api(path, body){
   if(!r.ok){ const err=new Error('api'); err.status=r.status; err.json=j; throw err; }
   return j;
 }
+async function loadShop(){
+  try{
+    const r=await fetch('/api/shop'), j=await r.json();
+    if(j.products && j.products.length){
+      P.length=0;
+      j.products.forEach(x=>P.push({id:x.id,cat:x.cat,art:x.art,mat:x.mat,price:x.price,old:x.old,stock:x.stock,sizes:x.sizes,colors:x.colors,name:{uz:x.name.uz,ru:x.name.ru,en:x.name.uz}}));
+      S.bag=S.bag.filter(l=>pById(l.id)); save();
+    }
+  }catch(e){}
+}
 async function init(){
+  await loadShop();
   if(inTG){
     try{
       const r=await api('/api/me',{initData:tg.initData});
@@ -685,6 +704,9 @@ document.addEventListener('click',ev=>{
     case 'fav': toggleFav(+v); render(); break;
     case 'favline': toggleFav(+v); render(); toast(t('favs')); break;
     case 'store': go('store'); break;
+    case 'applypromo': { const el=$('#f-promo'); const code=el&&el.value.trim(); if(!code) break;
+      api('/api/promo',{initData:tg.initData,code}).then(r=>{ S.promo={code:r.code,percent:r.percent}; render(); haptic('medium'); }).catch(()=>{ toast(t('badPromo')); haptic('heavy'); }); break; }
+    case 'rmpromo': S.promo=null; render(); break;
     case 'openmap': { const u=`https://www.google.com/maps?q=${STORE.lat},${STORE.lon}`; try{ tg.openLink(u); }catch(e){ window.open(u,'_blank'); } break; }
     case 'place': place(); break;
   }

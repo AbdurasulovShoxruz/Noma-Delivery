@@ -115,3 +115,15 @@ If your bot token was ever posted in a chat, screenshot or GitHub, replace it: @
 Open `https://YOUR-APP.vercel.app/admin` and sign in with `ADMIN_PASSWORD` (add it in Vercel, then Redeploy).
 It shows today's orders, revenue, a 7-day chart, all orders with status buttons (the customer is notified in the bot and the staff group message is updated), customers, and products.
 Use a long password: it is the only protection.
+
+## Products, stock, discounts and promo codes (admin panel)
+
+1. In Supabase open **SQL Editor -> New query**, paste everything from `supabase-admin.sql`, and click **Run**. It creates the product and promo tables and loads the 12 demo products.
+2. Push the code and wait for Vercel to show **Ready**.
+3. Open `/admin`:
+   - **Products**: **+ Add product**, or click a row to change price, discount %, stock, colours, sizes, visibility, or to delete it. Stock `0` shows "Sold out" in the shop; an empty stock means unlimited.
+   - **Promo codes**: create a code with a % discount, pause it, or delete it. Customers enter it in the bag; the server applies it again when the order is placed.
+4. Each order lowers the stock of its products and counts the promo use.
+
+Until step 1 is done, the shop keeps using the built-in product list.
+Limits: products use drawn silhouettes (no photo upload yet), and stock is not locked, so two orders at the same second could oversell by a piece.

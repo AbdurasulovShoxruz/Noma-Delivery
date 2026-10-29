@@ -1,8 +1,8 @@
 'use strict';
 /* Creates an order: checks the Telegram signature, requires a verified phone, prices the cart on the server,
    saves it, posts it to the staff group (with status buttons and a map pin) and confirms to the customer. */
-const { env, tg, verifyInitData, getCustomer, insertOrder, patchOrder } = require('../lib/common');
-const { priceOrder, inZone } = require('../lib/catalog');
+const { env, tg, db, getShop, clearShop, verifyInitData, getCustomer, insertOrder, patchOrder } = require('../lib/common');
+const { priceOrder, inZone, toCatalog, CATALOG } = require('../lib/catalog');
 const { orderText, keyboard, orderNo, money } = require('../lib/render');
 
 const clean = (s, n) => String(s == null ? '' : s).replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, n);
@@ -18,11 +18,20 @@ module.exports = async (req, res) => {
     if (!customer) return res.status(403).json({ error: 'not_verified' });
 
     const type = b.type === 'pickup' ? 'pickup' : 'courier';
+    const shop = await getShop();
+    const cat = shop ? toCatalog(shop) : CATALOG;
+    let pct = 0, promo = null;
+    if (b.promo) {
+      const code = String(b.promo).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20);
+      const r = (await db(`promos?code=eq.${code}&active=eq.true&select=*`).catch(() => [])) || [];
+      if (!r[0]) return res.status(400).json({ error: 'bad_promo' });
+      pct = r[0].percent; promo = r[0].code;
+    }
     let priced;
     try {
-      priced = priceOrder(b.items, type);
+      priced = priceOrder(b.items, type, cat, pct);
     } catch (e) {
-      return res.status(400).json({ error: 'bad_items' });
+      return res.status(400).json({ error: e.code === 'out_of_stock' ? 'out_of_stock' : 'bad_items' });
     }
     const pay = ['cash', 'card', 'online'].includes(b.pay) ? b.pay : 'cash';
 
@@ -44,12 +53,25 @@ module.exports = async (req, res) => {
       phone: customer.phone, // always the verified number, never one sent by the browser
       type, address, lat, lon, pay,
       items: priced.lines,
+      promo,
+      discount: priced.discount,
       subtotal: priced.subtotal,
       delivery_fee: priced.fee,
       total: priced.total,
       status: 'new',
       lang,
     });
+
+    try { // take the sold pieces out of stock, count the promo use
+      const sold = {};
+      priced.lines.forEach((l) => { sold[l.id] = (sold[l.id] || 0) + l.qty; });
+      for (const id of Object.keys(sold)) {
+        const st = cat[id] && cat[id].stock;
+        if (shop && st != null) await db(`shop_products?id=eq.${Number(id)}`, { method: 'PATCH', body: { stock: Math.max(0, st - sold[id]) } });
+      }
+      if (promo) { const u = (await db(`promos?code=eq.${promo}&select=used`))[0]; await db(`promos?code=eq.${promo}`, { method: 'PATCH', body: { used: ((u && u.used) || 0) + 1 } }); }
+      clearShop();
+    } catch (e) { console.error('stock', e.message); }
 
     if (env('STAFF_CHAT_ID')) {
       const m = await tg('sendMessage', {
