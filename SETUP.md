@@ -34,6 +34,8 @@ The secret key gives full access to your data. It goes only into Vercel (Part B)
 | `SUPABASE_SERVICE_KEY` | the secret key from Part A |
 | `WEBHOOK_SECRET` | any long random text; generate one in Terminal with `openssl rand -hex 20` |
 
+| `ADMIN_PASSWORD` | a strong password for the admin panel (opens at `/admin`) |
+
 Optional:
 - `PHONE_PREFIX`: default is `998` (Uzbek numbers only). Set it to `any` to accept foreign numbers, for example to test with another country's SIM.
 
@@ -107,3 +109,9 @@ If your bot token was ever posted in a chat, screenshot or GitHub, replace it: @
 - Telegram's "share my number" proves the number belongs to that Telegram account, and Telegram itself verified it by SMS, so it cannot be typed in or faked. It does not prove the person answers calls. An SMS code (Eskiz) can be added later if a client wants it.
 - Prices are checked on the server from `lib/catalog.js`, and the customer's phone always comes from the verified record, so the app cannot be tricked into changing them. When you edit products in `index.html`, edit `lib/catalog.js` too; `node scripts/test.js` checks they match.
 - Not included yet: real payments (Click / Payme), order history for customers, rate limiting.
+
+## Admin panel
+
+Open `https://YOUR-APP.vercel.app/admin` and sign in with `ADMIN_PASSWORD` (add it in Vercel, then Redeploy).
+It shows today's orders, revenue, a 7-day chart, all orders with status buttons (the customer is notified in the bot and the staff group message is updated), customers, and products.
+Use a long password: it is the only protection.
