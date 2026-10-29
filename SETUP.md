@@ -133,3 +133,6 @@ Run `supabase-update.sql` in the same way (after `supabase-admin.sql`). It adds:
 - **Photos**: in the product editor press **+ Photo** (up to 3, resized in the browser, stored in a public Supabase bucket named `products`). The first photo replaces the drawn silhouette.
 - **Safe stock**: stock is now taken in the database in one step, so two simultaneous orders cannot buy the same last piece.
 New in the shop: search, price sorting, a size guide on the product page, and "My orders" (link at the bottom of the home page). The admin Overview lists products with 5 or fewer in stock.
+
+### Shoes
+Run `supabase-shoes.sql` (after `supabase-update.sql`). The shop gets a **Shoes** category with the sections Sneakers and Boots and 3 demo products with shoe sizes 36–46. In the admin product editor, choose Category **shoes**, Shape **sneaker** or **boot**, and Sizes **Shoes 36–46**. The Products tab has category filters, including Shoes.

@@ -2,7 +2,7 @@
 /* Admin panel API. Login with ADMIN_PASSWORD (set in Vercel); returns a signed 12-hour token. */
 const crypto = require('crypto');
 const { env, tg, db, getOrder, patchOrder, clearShop } = require('../lib/common');
-const { CATALOG, ARTS, MATS, CATS, SUBS, CL, COLOR_NAMES } = require('../lib/catalog');
+const { CATALOG, ARTS, MATS, CATS, SUBS, CL, SH, COLOR_NAMES } = require('../lib/catalog');
 const { orderText, keyboard, nextStatuses, orderNo, CUSTOMER_NOTE } = require('../lib/render');
 
 const key = () => crypto.createHash('sha256').update(`${env('ADMIN_PASSWORD')}|${env('WEBHOOK_SECRET')}`).digest();
@@ -67,7 +67,7 @@ module.exports = async (req, res) => {
       let id = int(p.id, 1, 1e6);
       if (!id) { const all = (await db('shop_products?select=id')) || []; id = Math.max(99, ...all.map((r) => r.id)) + 1; }
       await db('shop_products?on_conflict=id', { method: 'POST', prefer: 'resolution=merge-duplicates',
-        body: { id, name, cat: p.cat, art: p.art, mat: p.mat, price, sale, stock, active: p.active !== false, sizes: p.sizes ? CL : null, colors, sub: SUBS.includes(p.sub) ? p.sub : null, photos } });
+        body: { id, name, cat: p.cat, art: p.art, mat: p.mat, price, sale, stock, active: p.active !== false, sizes: p.sizes === 'shoes' ? SH : p.sizes === 'clothing' || p.sizes === true ? CL : null, colors, sub: SUBS.includes(p.sub) ? p.sub : null, photos } });
       clearShop();
       return res.status(200).json({ ok: true });
     }
