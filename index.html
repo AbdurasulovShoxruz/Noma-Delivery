@@ -166,7 +166,8 @@ input,select{font:inherit;color:inherit}
 .ltot{font-size:13px;color:var(--mute)}.row{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
 .irow{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}.irow span:first-child{color:var(--mute)}
 #smap{height:200px;border-radius:var(--r);border:1px solid var(--line);margin-top:18px;overflow:hidden;position:relative;isolation:isolate}
-.hero .pill+.pill{margin-left:8px}.foot{margin-top:34px;text-align:center}
+.hero .pill+.pill{margin-left:8px}.opt[disabled]{opacity:.35;text-decoration:line-through;cursor:not-allowed}
+.foot{margin-top:34px;text-align:center}
 .tools{display:flex;gap:10px;margin-top:14px}.tools .inp{border:1px solid var(--line);border-radius:999px;padding:10px 16px;font-size:14px;background:var(--card)}.tools .inp:first-child{flex:1;min-width:0}.tools select{width:auto;max-width:46%}
 .pr s{color:var(--mute);opacity:.7;margin-right:4px}.off{position:absolute;left:8px;top:8px;z-index:2;font-size:11px;background:var(--ink);color:var(--bg);border-radius:999px;padding:2px 9px}
 .promo{display:flex;gap:10px;align-items:center;margin-top:16px}.promo .inp{flex:1;text-transform:uppercase;font-size:14px}
@@ -208,7 +209,7 @@ en:{shop:'Shop',bag:'Bag',quickBag:'Quick Bag',addToBag:'Add to bag',size:'Size'
  kicker:'Autumn / Winter',heroTitle:'Quiet clothes, made to last',heroSub:'Considered essentials in natural fabrics.',shopNow:'Shop now',
  oneSize:'One size',remove:'Remove',desc:'Cut from natural fabrics with a relaxed, considered fit. Made to be worn often and kept for years.',
  details:'Your details',req:'Please fill in',freeOver:'Free delivery over',items:'items',pickDistrict:'Choose district',back:'Back',added:'Added to bag',
- payNote:'Demo mode: no real payment is taken.',skuMaterial:{linen:'100% linen',cotton:'100% organic cotton',wool:'Wool blend',knit:'Merino wool',canvas:'Heavy canvas',viscose:'Viscose crepe',leather:'Natural leather'}},
+ payNote:'Demo mode: no real payment is taken.',skuMaterial:{linen:'100% linen',cotton:'100% organic cotton',wool:'Wool blend',knit:'Merino wool',canvas:'Heavy canvas',viscose:'Viscose crepe',leather:'Natural leather',suede:'Suede',mesh:'Mesh',synthetic:'Synthetic',denim:'Denim',silk:'Silk'}},
 ru:{shop:'Магазин',bag:'Корзина',quickBag:'В корзину',addToBag:'Добавить в корзину',size:'Размер',color:'Цвет',material:'Материал',checkout:'Оформить заказ',
  empty:'Корзина пуста',emptySub:'Добавьте то, что вам нравится.',continue:'Продолжить покупки',subtotal:'Сумма',delivery:'Доставка',total:'Итого',free:'Бесплатно',
  name:'Имя и фамилия',phone:'Телефон',deliveryType:'Получение',courier:'Курьер',courierSub:'По Ташкенту',pickup:'Самовывоз',pickupSub:'Из магазина',
@@ -218,7 +219,7 @@ ru:{shop:'Магазин',bag:'Корзина',quickBag:'В корзину',addT
  kicker:'Осень / Зима',heroTitle:'Тихая одежда на долгие годы',heroSub:'Продуманная база из натуральных тканей.',shopNow:'Смотреть',
  oneSize:'Единый размер',remove:'Удалить',desc:'Из натуральных тканей, свободный продуманный крой. Чтобы носить часто и хранить годами.',
  details:'Ваши данные',req:'Заполните поле',freeOver:'Бесплатная доставка от',items:'шт.',pickDistrict:'Выберите район',back:'Назад',added:'Добавлено в корзину',
- payNote:'Демо-режим: реальная оплата не производится.',skuMaterial:{linen:'100% лён',cotton:'100% органический хлопок',wool:'Шерстяная смесь',knit:'Шерсть мериноса',canvas:'Плотный канвас',viscose:'Вискозный креп',leather:'Натуральная кожа'}},
+ payNote:'Демо-режим: реальная оплата не производится.',skuMaterial:{linen:'100% лён',cotton:'100% органический хлопок',wool:'Шерстяная смесь',knit:'Шерсть мериноса',canvas:'Плотный канвас',viscose:'Вискозный креп',leather:'Натуральная кожа',suede:'Замша',mesh:'Сетка',synthetic:'Синтетика',denim:'Деним',silk:'Шёлк'}},
 uz:{shop:'Do\u2019kon',bag:'Savat',quickBag:'Savatga',addToBag:'Savatga qo\u2018shish',size:'O\u2018lcham',color:'Rang',material:'Material',checkout:'Buyurtma berish',
  empty:'Savat bo\u2018sh',emptySub:'O\u2018zingizga yoqqanini qo\u2018shing.',continue:'Xaridni davom ettirish',subtotal:'Jami',delivery:'Yetkazib berish',total:'Umumiy',free:'Bepul',
  name:'Ism va familiya',phone:'Telefon',deliveryType:'Qabul qilish',courier:'Kuryer',courierSub:'Toshkent bo\u2018ylab',pickup:'Olib ketish',pickupSub:'Do\u2018kondan',
@@ -228,7 +229,7 @@ uz:{shop:'Do\u2019kon',bag:'Savat',quickBag:'Savatga',addToBag:'Savatga qo\u2018
  kicker:'Kuz / Qish',heroTitle:'Uzoq yillarga mo\u2018ljallangan sokin kiyimlar',heroSub:'Tabiiy matolardan puxta tanlangan asosiy kiyimlar.',shopNow:'Ko\u2018rish',
  oneSize:'Yagona o\u2018lcham',remove:'O\u2018chirish',desc:'Tabiiy matolardan, erkin va o\u2018ylangan kesim. Tez-tez kiyish va yillar davomida saqlash uchun.',
  details:'Ma\u2019lumotlaringiz',req:'To\u2018ldiring',freeOver:'Bepul yetkazish',items:'dona',pickDistrict:'Tumanni tanlang',back:'Orqaga',added:'Savatga qo\u2018shildi',
- payNote:'Demo rejim: haqiqiy to\u2018lov olinmaydi.',skuMaterial:{linen:'100% zig\u2018ir',cotton:'100% organik paxta',wool:'Jun aralashmasi',knit:'Merinos juni',canvas:'Qalin kanvas',viscose:'Viskoza krep',leather:'Tabiiy teri'}}
+ payNote:'Demo rejim: haqiqiy to\u2018lov olinmaydi.',skuMaterial:{linen:'100% zig\u2018ir',cotton:'100% organik paxta',wool:'Jun aralashmasi',knit:'Merinos juni',canvas:'Qalin kanvas',viscose:'Viskoza krep',leather:'Tabiiy teri',suede:'Zamsh',mesh:'To\u2018r mato',synthetic:'Sintetika',denim:'Jinsi',silk:'Ipak'}}
 };
 Object.assign(I.uz,{favs:'Sevimlilar',favEmpty:'Sevimlilar bo\u2018sh',favEmptySub:'Yurak belgisini bosib saqlang.',store:'Do\u2018kon',ourStore:'Do\u2018konimiz',since:'2020-yildan beri',address:'Manzil',hours:'Ish vaqti',call:'Qo\u2018ng\u2018iroq qilish',openMap:'Xaritada ochish',storeAddr:'Amir Temur ko\u2018chasi 15, Toshkent',storeHours:'Har kuni 10:00 \u2013 22:00',storeAbout:'NOMA 2020-yildan beri Toshkentda tabiiy matolardan sokin kiyimlar tikadi.',freeLeft:'Bepul yetkazish uchun yana',freeOk:'Bepul yetkazish ochildi',saveFav:'Sevimlilarga',lineTotal:'Jami',theme:'Mavzu'});
 Object.assign(I.ru,{favs:'Избранное',favEmpty:'В избранном пусто',favEmptySub:'Нажмите на сердце, чтобы сохранить.',store:'Магазин',ourStore:'Наш магазин',since:'С 2020 года',address:'Адрес',hours:'Часы работы',call:'Позвонить',openMap:'Открыть на карте',storeAddr:'ул. Амира Темура 15, Ташкент',storeHours:'Ежедневно 10:00 \u2013 22:00',storeAbout:'NOMA с 2020 года шьёт спокойную одежду из натуральных тканей в Ташкенте.',freeLeft:'До бесплатной доставки',freeOk:'Бесплатная доставка включена',saveFav:'В избранное',lineTotal:'Сумма',theme:'Тема'});
@@ -236,15 +237,17 @@ Object.assign(I.en,{favs:'Favourites',favEmpty:'No favourites yet',favEmptySub:'
 Object.assign(I.uz,{promo:'Promo-kod',apply:'Qo\u2018llash',badPromo:'Promo-kod topilmadi',soldOut:'Qolmagan',outOfStock:'Omborda yetarli emas'});
 Object.assign(I.ru,{promo:'Промокод',apply:'Применить',badPromo:'Промокод не найден',soldOut:'Нет в наличии',outOfStock:'Недостаточно на складе'});
 Object.assign(I.en,{promo:'Promo code',apply:'Apply',badPromo:'Promo code not found',soldOut:'Sold out',outOfStock:'Not enough in stock'});
-Object.assign(I.uz,{sneakers:'Krossovkalar',boots:'Botinkalar',search:'Qidirish',sortDef:'Tavsiya',sortLow:'Narx: arzonroq',sortHigh:'Narx: qimmatroq',sizeGuide:'O\u2018lchamlar jadvali',chest:'Ko\u2018krak (sm)',waist:'Bel (sm)',myOrders:'Buyurtmalarim',noOrders:'Hozircha buyurtma yo\u2018q',noFound:'Hech narsa topilmadi',
+Object.assign(I.uz,{onlyLeft:'Qoldi:',sneakers:'Krossovkalar',boots:'Botinkalar',search:'Qidirish',sortDef:'Tavsiya',sortLow:'Narx: arzonroq',sortHigh:'Narx: qimmatroq',sizeGuide:'O\u2018lchamlar jadvali',chest:'Ko\u2018krak (sm)',waist:'Bel (sm)',myOrders:'Buyurtmalarim',noOrders:'Hozircha buyurtma yo\u2018q',noFound:'Hech narsa topilmadi',
  st_new:'Yangi',st_accepted:'Qabul qilindi',st_on_way:'Yo\u2018lda',st_delivered:'Yetkazildi',st_cancelled:'Bekor qilindi',
  dresses:'Ko\u2018ylaklar',tops:'Ustki kiyim',knitwear:'Trikotaj',bottoms:'Pastki kiyim',outerwear:'Ustki qatlam',bags:'Sumkalar',scarves:'Sharflar',hats:'Bosh kiyim'});
-Object.assign(I.ru,{sneakers:'Кроссовки',boots:'Ботинки',search:'Поиск',sortDef:'Рекомендуемые',sortLow:'Цена: по возрастанию',sortHigh:'Цена: по убыванию',sizeGuide:'Таблица размеров',chest:'Грудь (см)',waist:'Талия (см)',myOrders:'Мои заказы',noOrders:'Заказов пока нет',noFound:'Ничего не найдено',
+Object.assign(I.ru,{onlyLeft:'Осталось:',sneakers:'Кроссовки',boots:'Ботинки',search:'Поиск',sortDef:'Рекомендуемые',sortLow:'Цена: по возрастанию',sortHigh:'Цена: по убыванию',sizeGuide:'Таблица размеров',chest:'Грудь (см)',waist:'Талия (см)',myOrders:'Мои заказы',noOrders:'Заказов пока нет',noFound:'Ничего не найдено',
  st_new:'Новый',st_accepted:'Принят',st_on_way:'В пути',st_delivered:'Доставлен',st_cancelled:'Отменён',
  dresses:'Платья',tops:'Верх',knitwear:'Трикотаж',bottoms:'Низ',outerwear:'Верхняя одежда',bags:'Сумки',scarves:'Шарфы',hats:'Головные уборы'});
-Object.assign(I.en,{sneakers:'Sneakers',boots:'Boots',search:'Search',sortDef:'Featured',sortLow:'Price: low to high',sortHigh:'Price: high to low',sizeGuide:'Size guide',chest:'Chest (cm)',waist:'Waist (cm)',myOrders:'My orders',noOrders:'No orders yet',noFound:'Nothing found',
+Object.assign(I.en,{onlyLeft:'Left:',sneakers:'Sneakers',boots:'Boots',search:'Search',sortDef:'Featured',sortLow:'Price: low to high',sortHigh:'Price: high to low',sizeGuide:'Size guide',chest:'Chest (cm)',waist:'Waist (cm)',myOrders:'My orders',noOrders:'No orders yet',noFound:'Nothing found',
  st_new:'New',st_accepted:'Accepted',st_on_way:'On the way',st_delivered:'Delivered',st_cancelled:'Cancelled',
  dresses:'Dresses',tops:'Tops',knitwear:'Knitwear',bottoms:'Bottoms',outerwear:'Outerwear',bags:'Bags',scarves:'Scarves',hats:'Hats'});
+const matText=p=>(p.matText&&(p.matText[S.lang]||p.matText.uz))||I[S.lang].skuMaterial[p.mat]||p.mat;
+const sOut=(p,s)=>!!p.sizeStock&&!(p.sizeStock[s]>0);
 const SUBOF={dress:'dresses',tee:'tops',shirt:'tops',hoodie:'knitwear',knit:'knitwear',trousers:'bottoms',shorts:'bottoms',skirt:'bottoms',coat:'outerwear',tote:'bags',scarf:'scarves',cap:'hats',sneaker:'sneakers',boot:'boots'};
 const subOf=p=>p.sub||SUBOF[p.art]||'tops';
 const SIZES=[['XS',84,66],['S',88,70],['M',92,74],['L',98,80],['XL',104,86]];
@@ -442,9 +445,10 @@ function pdp(){
   <div class="pdp"><div class="art">${heart(p.id)}${art(p,c)}</div>
   <h2>${p.name[S.lang]}</h2><div class="price">${p.old?`<s class="muted">${fmt(p.old)}</s> `:''}${fmt(p.price)}</div>
   <div class="label">${t('color')}</div><div class="opts">${p.colors.map((h,i)=>`<button class="sw ${S.sel.color===i?'on':''}" style="background:${h}" data-a="color" data-v="${i}" aria-label="${h}"></button>`).join('')}</div>
-  <div class="label">${t('size')}</div><div class="opts">${p.sizes?p.sizes.map(s=>`<button class="opt ${S.sel.size===s?'on':''}" data-a="size" data-v="${s}">${s}</button>`).join(''):`<button class="opt on">${t('oneSize')}</button>`}</div>
+  <div class="label">${t('size')}</div><div class="opts">${p.sizes?p.sizes.map(s=>`<button class="opt ${S.sel.size===s?'on':''}" ${sOut(p,s)?'disabled':''} data-a="size" data-v="${s}">${s}</button>`).join(''):`<button class="opt on">${t('oneSize')}</button>`}</div>
+  ${S.sel.size&&p.sizeStock&&p.sizeStock[S.sel.size]>0&&p.sizeStock[S.sel.size]<=3?`<div class="muted small" style="margin-top:8px">${t('onlyLeft')} ${p.sizeStock[S.sel.size]}</div>`:''}
   ${p.sizes&&p.sizes[0]==='XS'?`<button class="link" data-a="sizes" style="margin-top:10px;text-decoration:underline">${t('sizeGuide')}</button>`:''}
-  <div class="label">${t('material')}</div><div>${I[S.lang].skuMaterial[p.mat]}</div>
+  <div class="label">${t('material')}</div><div>${matText(p)}</div>
   <p class="muted" style="margin-top:18px">${t('desc')}</p></div>
   <div class="dock">${p.stock===0?`<button class="pill full" disabled>${t('soldOut')}</button>`:`<button class="pill full" data-a="addpdp">${t('addToBag')} \u00B7 ${fmt(p.price)}</button>`}</div>`;
 }
@@ -527,7 +531,7 @@ function drawSheet(){
   $('#sheet').innerHTML=`<div class="grab"></div>
   <div class="srow"><div class="art">${art(p,p.colors[color])}</div><div><div>${p.name[S.lang]}</div><div class="muted">${fmt(p.price)}</div></div></div>
   <div class="label" style="margin-top:14px">${t('color')}</div><div class="opts">${p.colors.map((h,i)=>`<button class="sw ${color===i?'on':''}" style="background:${h}" data-a="scolor" data-v="${i}"></button>`).join('')}</div>
-  <div class="label">${t('size')}</div><div class="opts">${p.sizes?p.sizes.map(s=>`<button class="opt ${size===s?'on':''}" data-a="ssize" data-v="${s}">${s}</button>`).join(''):`<button class="opt on">${t('oneSize')}</button>`}</div>
+  <div class="label">${t('size')}</div><div class="opts">${p.sizes?p.sizes.map(s=>`<button class="opt ${size===s?'on':''}" ${sOut(p,s)?'disabled':''} data-a="ssize" data-v="${s}">${s}</button>`).join(''):`<button class="opt on">${t('oneSize')}</button>`}</div>
   <div style="margin-top:22px"><button class="pill full" data-a="sadd" ${p.sizes&&!size?'disabled':''}>${t('addToBag')}</button></div>`;
 }
 function closeSheet(){ S.sheet=null; $('#scrim').classList.remove('on'); $('#sheet').classList.remove('on'); }
@@ -613,7 +617,7 @@ async function loadShop(){
     const r=await fetch('/api/shop'), j=await r.json();
     if(j.products && j.products.length){
       P.length=0;
-      j.products.forEach(x=>P.push({id:x.id,cat:x.cat,art:x.art,mat:x.mat,price:x.price,old:x.old,stock:x.stock,sub:x.sub,photos:x.photos,sizes:x.sizes,colors:x.colors,name:{uz:x.name.uz,ru:x.name.ru,en:x.name.uz}}));
+      j.products.forEach(x=>P.push({id:x.id,cat:x.cat,art:x.art,mat:x.mat,price:x.price,old:x.old,stock:x.stock,sub:x.sub,photos:x.photos,sizeStock:x.sizeStock,matText:x.matText,sizes:x.sizes,colors:x.colors,name:{uz:x.name.uz,ru:x.name.ru,en:x.name.uz}}));
       S.bag=S.bag.filter(l=>pById(l.id)); save();
     }
   }catch(e){}

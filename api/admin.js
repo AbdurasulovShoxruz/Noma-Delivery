@@ -35,7 +35,7 @@ module.exports = async (req, res) => {
         db('promos?select=*&order=code').catch(() => null),
       ]);
       const catalog = Object.entries(CATALOG).map(([id, p]) => ({ id: +id, name: p.uz, price: p.price }));
-      return res.status(200).json({ orders: orders || [], customers: customers || [], catalog, products, promos: promos || [], opts: { ARTS, MATS, CATS, SUBS, COLORS: COLOR_NAMES } });
+      return res.status(200).json({ orders: orders || [], customers: customers || [], catalog, products, promos: promos || [], opts: { ARTS, MATS, CATS, SUBS, SIZES: { clothing: CL, shoes: SH }, COLORS: COLOR_NAMES } });
     }
 
     if (b.action === 'status') {
@@ -64,10 +64,24 @@ module.exports = async (req, res) => {
           !colors.length || !CATS.includes(p.cat) || !ARTS.includes(p.art) || !MATS.includes(p.mat)) return res.status(400).json({ error: 'bad_product' });
       const base = `${env('SUPABASE_URL')}/storage/v1/object/public/products/`;
       const photos = (Array.isArray(p.photos) ? p.photos : []).filter((u) => typeof u === 'string' && u.startsWith(base)).slice(0, 3);
+      const kind = p.sizes === 'shoes' ? SH : p.sizes === 'clothing' || p.sizes === true ? CL : null;
+      let size_stock = null;
+      if (kind && p.size_stock && typeof p.size_stock === 'object') {
+        size_stock = {};
+        for (const s of kind) {
+          const v = p.size_stock[s], n = v === '' || v == null ? 0 : Number(v);
+          if (!Number.isInteger(n) || n < 0 || n > 100000) return res.status(400).json({ error: 'bad_product' });
+          size_stock[s] = n;
+        }
+      }
+      const mt = p.mat_text || {};
+      const mat_text = p.mat === 'other' ? { uz: String(mt.uz || '').trim().slice(0, 40), ru: String(mt.ru || '').trim().slice(0, 40) } : null;
+      if (mat_text && (!mat_text.uz || !mat_text.ru)) return res.status(400).json({ error: 'bad_product' });
+      const finalStock = size_stock ? Object.values(size_stock).reduce((a, b) => a + b, 0) : stock;
       let id = int(p.id, 1, 1e6);
       if (!id) { const all = (await db('shop_products?select=id')) || []; id = Math.max(99, ...all.map((r) => r.id)) + 1; }
       await db('shop_products?on_conflict=id', { method: 'POST', prefer: 'resolution=merge-duplicates',
-        body: { id, name, cat: p.cat, art: p.art, mat: p.mat, price, sale, stock, active: p.active !== false, sizes: p.sizes === 'shoes' ? SH : p.sizes === 'clothing' || p.sizes === true ? CL : null, colors, sub: SUBS.includes(p.sub) ? p.sub : null, photos } });
+        body: { id, name, cat: p.cat, art: p.art, mat: p.mat, price, sale, stock: finalStock, size_stock, mat_text, active: p.active !== false, sizes: p.sizes === 'shoes' ? SH : p.sizes === 'clothing' || p.sizes === true ? CL : null, colors, sub: SUBS.includes(p.sub) ? p.sub : null, photos } });
       clearShop();
       return res.status(200).json({ ok: true });
     }

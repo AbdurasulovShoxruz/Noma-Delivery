@@ -47,17 +47,24 @@ module.exports = async (req, res) => {
     const name = clean(b.name, 60) || customer.first_name || '—';
     const lang = b.lang === 'ru' ? 'ru' : 'uz';
 
-    const sold = {};
-    priced.lines.forEach((l) => { sold[l.id] = (sold[l.id] || 0) + l.qty; });
+    const plain = {}, bySize = {};
+    priced.lines.forEach((l) => {
+      const p = cat[l.id];
+      if (p && p.sizeStock) { const k = `${l.id}|${l.size}`; bySize[k] = (bySize[k] || 0) + l.qty; }
+      else plain[l.id] = (plain[l.id] || 0) + l.qty;
+    });
     const taken = [];
-    const release = () => Promise.all(taken.map((id) => db('rpc/give_stock', { method: 'POST', body: { pid: Number(id), q: sold[id] } }).catch(() => {})));
+    const release = () => Promise.all(taken.map((t) => db(`rpc/${t.fn}`, { method: 'POST', body: t.body }).catch(() => {})));
     if (shop) {
-      for (const id of Object.keys(sold)) {
-        if (!cat[id] || cat[id].stock == null) continue;
+      const jobs = [
+        ...Object.keys(plain).filter((id) => cat[id] && cat[id].stock != null).map((id) => ({ take: 'take_stock', give: 'give_stock', body: { pid: Number(id), q: plain[id] } })),
+        ...Object.keys(bySize).map((k) => { const [id, sz] = k.split('|'); return { take: 'take_size_stock', give: 'give_size_stock', body: { pid: Number(id), sz, q: bySize[k] } }; }),
+      ];
+      for (const j of jobs) {
         let ok = false;
-        try { ok = (await db('rpc/take_stock', { method: 'POST', body: { pid: Number(id), q: sold[id] } })) === true; } catch (e) { console.error('take_stock', e.message); }
+        try { ok = (await db(`rpc/${j.take}`, { method: 'POST', body: j.body })) === true; } catch (e) { console.error(j.take, e.message); }
         if (!ok) { await release(); return res.status(400).json({ error: 'out_of_stock' }); }
-        taken.push(id);
+        taken.push({ fn: j.give, body: j.body });
       }
     }
     let order;

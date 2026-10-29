@@ -136,3 +136,8 @@ New in the shop: search, price sorting, a size guide on the product page, and "M
 
 ### Shoes
 Run `supabase-shoes.sql` (after `supabase-update.sql`). The shop gets a **Shoes** category with the sections Sneakers and Boots and 3 demo products with shoe sizes 36–46. In the admin product editor, choose Category **shoes**, Shape **sneaker** or **boot**, and Sizes **Shoes 36–46**. The Products tab has category filters, including Shoes.
+
+### Stock per size and your own material text
+Run `supabase-sizes.sql` in the Supabase SQL Editor (after the other SQL files), push the code, and wait for Ready.
+- **Stock for each size**: in the product editor choose Sizes (Clothing or Shoes), tick **Stock for each size**, and type a number for every size, for example M 6, S 2, XL empty. An empty size or 0 is greyed out and crossed out in the shop and cannot be ordered. The total stock is the sum of the sizes. Each order lowers only the size that was bought, and it is locked in the database, so the last piece cannot be sold twice. A size with 3 or fewer pieces shows "Left: N" on the product page.
+- **Material**: the list now also has Leather, Suede, Mesh, Synthetic, Denim and Silk. Choose **other** to type your own text in Uzbek and Russian; the shop shows exactly that text.
