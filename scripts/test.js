@@ -170,7 +170,7 @@ const ok = (name) => console.log(`  ok ${++n} ${name}`);
   /* catalog parity with index.html */
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   const src = /const P = (\[[\s\S]*?\n\]);/.exec(html)[1];
-  const P = new Function('CL', 'SH', 'return ' + src)(['XS', 'S', 'M', 'L', 'XL'], require('../lib/catalog').SH);
+  const P = new Function('CL', 'return ' + src)(['XS', 'S', 'M', 'L', 'XL']);
   const { CATALOG } = require('../lib/catalog');
   assert.strictEqual(P.length, Object.keys(CATALOG).length);
   for (const p of P) {
