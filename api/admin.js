@@ -85,7 +85,7 @@ module.exports = async (req, res) => {
       let id = int(p.id, 1, 1e6);
       if (!id) { const all = (await db('shop_products?select=id')) || []; id = Math.max(99, ...all.map((r) => r.id)) + 1; }
       await db('shop_products?on_conflict=id', { method: 'POST', prefer: 'resolution=merge-duplicates',
-        body: { id, name, cat: p.cat, art: p.art, mat: p.mat, price, sale, stock: finalStock, size_stock, mat_text, active: p.active !== false, sizes: p.sizes === 'shoes' ? SH : p.sizes === 'clothing' || p.sizes === true ? CL : null, colors, sub: SUBS.includes(p.sub) ? p.sub : null, photos } });
+        body: { id, name, cat: p.cat, art: p.art, mat: p.mat, price, sale, stock: finalStock, size_stock, mat_text, is_new: p.is_new === true, active: p.active !== false, sizes: p.sizes === 'shoes' ? SH : p.sizes === 'clothing' || p.sizes === true ? CL : null, colors, sub: SUBS.includes(p.sub) ? p.sub : null, photos } });
       clearShop();
       return res.status(200).json({ ok: true });
     }

@@ -34,6 +34,8 @@ The secret key gives full access to your data. It goes only into Vercel (Part B)
 | `SUPABASE_SERVICE_KEY` | the secret key from Part A |
 | `WEBHOOK_SECRET` | any long random text; generate one in Terminal with `openssl rand -hex 20` |
 
+| `ADMIN_PASSWORD` | a strong password for the admin panel (opens at `/admin`) |
+
 Optional:
 - `PHONE_PREFIX`: default is `998` (Uzbek numbers only). Set it to `any` to accept foreign numbers, for example to test with another country's SIM.
 
@@ -107,3 +109,36 @@ If your bot token was ever posted in a chat, screenshot or GitHub, replace it: @
 - Telegram's "share my number" proves the number belongs to that Telegram account, and Telegram itself verified it by SMS, so it cannot be typed in or faked. It does not prove the person answers calls. An SMS code (Eskiz) can be added later if a client wants it.
 - Prices are checked on the server from `lib/catalog.js`, and the customer's phone always comes from the verified record, so the app cannot be tricked into changing them. When you edit products in `index.html`, edit `lib/catalog.js` too; `node scripts/test.js` checks they match.
 - Not included yet: real payments (Click / Payme), order history for customers, rate limiting.
+
+## Admin panel
+
+Open `https://YOUR-APP.vercel.app/admin` and sign in with `ADMIN_PASSWORD` (add it in Vercel, then Redeploy).
+It shows today's orders, revenue, a 7-day chart, all orders with status buttons (the customer is notified in the bot and the staff group message is updated), customers, and products.
+Use a long password: it is the only protection.
+
+## Products, stock, discounts and promo codes (admin panel)
+
+1. In Supabase open **SQL Editor -> New query**, paste everything from `supabase-admin.sql`, and click **Run**. It creates the product and promo tables and loads the 12 demo products.
+2. Push the code and wait for Vercel to show **Ready**.
+3. Open `/admin`:
+   - **Products**: **+ Add product**, or click a row to change price, discount %, stock, colours, sizes, visibility, or to delete it. Stock `0` shows "Sold out" in the shop; an empty stock means unlimited.
+   - **Promo codes**: create a code with a % discount, pause it, or delete it. Customers enter it in the bag; the server applies it again when the order is placed.
+4. Each order lowers the stock of its products and counts the promo use.
+
+Until step 1 is done, the shop keeps using the built-in product list.
+
+### Second update: photos, sections, safe stock
+Run `supabase-update.sql` in the same way (after `supabase-admin.sql`). It adds:
+- the **Section** field (Dresses, Tops, Knitwear, Bottoms, Outerwear, Bags, Scarves, Hats). In the shop, choosing Women, Men or Accessories shows only the sections that have products.
+- **Photos**: in the product editor press **+ Photo** (up to 3, resized in the browser, stored in a public Supabase bucket named `products`). The first photo replaces the drawn silhouette.
+- **Safe stock**: stock is now taken in the database in one step, so two simultaneous orders cannot buy the same last piece.
+New in the shop: search, price sorting, a size guide on the product page, and "My orders" (link at the bottom of the home page). The admin Overview lists products with 5 or fewer in stock.
+
+### Shoes
+Run `supabase-shoes.sql` (after `supabase-update.sql`). The shop gets a **Shoes** category with the sections Sneakers and Boots and 3 demo products with shoe sizes 36–46. In the admin product editor, choose Category **shoes**, Shape **sneaker** or **boot**, and Sizes **Shoes 36–46**. The Products tab has category filters, including Shoes.
+
+### Stock per size and your own material text
+Run `supabase-sizes.sql` in the Supabase SQL Editor (after the other SQL files), push the code, and wait for Ready.
+- Run `supabase-sections.sql` once too: it adds the "New Products" flag used by the home page and the admin panel.
+- **Stock for each size**: in the product editor choose Sizes (Clothing or Shoes), tick **Stock for each size**, and type a number for every size, for example M 6, S 2, XL empty. An empty size or 0 is greyed out and crossed out in the shop and cannot be ordered. The total stock is the sum of the sizes. Each order lowers only the size that was bought, and it is locked in the database, so the last piece cannot be sold twice. A size with 3 or fewer pieces shows "Left: N" on the product page.
+- **Material**: the list now also has Leather, Suede, Mesh, Synthetic, Denim and Silk. Choose **other** to type your own text in Uzbek and Russian; the shop shows exactly that text.
