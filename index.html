@@ -173,6 +173,7 @@ input,select{font:inherit;color:inherit}
 .gdots{position:absolute;left:0;right:0;bottom:9px;display:flex;justify-content:center;gap:5px;z-index:2;pointer-events:none}
 .gdots i{display:block;pointer-events:auto;width:6px;height:6px;border-radius:50%;background:color-mix(in srgb,var(--bg) 75%,transparent);border:1px solid color-mix(in srgb,var(--ink) 35%,transparent);transition:width .2s,background .2s}
 .gdots i.on{width:18px;border-radius:4px;background:var(--ink);border-color:var(--ink)}
+.rail .gtrack{overscroll-behavior-x:auto}
 .card .gdots i{pointer-events:none;width:5px;height:5px}.card .gdots i.on{width:14px}
 .allph{margin-top:10px;text-align:center}
 .ib[hidden]{display:none}
@@ -433,7 +434,7 @@ function topbar(){
 }
 function card(p,rail){
   return `<div class="card">
-    ${p.old?`<span class="off">\u2212${Math.round(100-p.price/p.old*100)}%</span>`:''}${p.isNew?`<span class="off nw">${t('newTag')}</span>`:''}${heart(p.id)}<button class="art${(!rail&&pphotos(p).length>1)?' gal':''}" data-a="open" data-v="${p.id}" aria-label="${p.name[S.lang]}">${(!rail&&pphotos(p).length>1)?strip(pphotos(p)):art(p)}</button>
+    ${p.old?`<span class="off">\u2212${Math.round(100-p.price/p.old*100)}%</span>`:''}${p.isNew?`<span class="off nw">${t('newTag')}</span>`:''}${heart(p.id)}<button class="art${(pphotos(p).length>1)?' gal':''}" data-a="open" data-v="${p.id}" aria-label="${p.name[S.lang]}">${(pphotos(p).length>1)?strip(pphotos(p)):art(p)}</button>
     <div class="nm">${p.name[S.lang]}</div><div class="pr">${p.old?`<s>${fmt(p.old)}</s>`:''}${fmt(p.price)}</div>
     ${p.stock===0?`<button class="pill sm" disabled>${t('soldOut')}</button>`:`<button class="pill sm" data-a="quick" data-v="${p.id}">${t('quickBag')}</button>`}
   </div>`;
@@ -470,7 +471,7 @@ function rails(){
   if(S.cat!=='all') return '';
   const nw=P.filter(p=>p.isNew).sort((a,b)=>b.id-a.id);
   const ds=P.filter(p=>p.old>0).sort((a,b)=>(b.old-b.price)/b.old-(a.old-a.price)/a.old);
-  const rail=(title,L)=>L.length?`<section class="rsec"><h3>${title}</h3><div class="rail">${L.map(p=>card(p,true)).join('')}</div></section>`:'';
+  const rail=(title,L)=>L.length?`<section class="rsec"><h3>${title}</h3><div class="rail">${L.map(card).join('')}</div></section>`:'';
   return rail(t('newProducts'),nw)+rail(t('discProducts'),ds);
 }
 function home(){
