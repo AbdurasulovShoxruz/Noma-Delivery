@@ -2,7 +2,9 @@
 /* Admin panel API. Login with ADMIN_PASSWORD (set in Vercel); returns a signed 12-hour token. */
 const crypto = require('crypto');
 const { env, tg, db, getOrder, patchOrder, clearShop } = require('../lib/common');
-const { CATALOG, ARTS, MATS, CATS, SUBS, CL, SH, COLOR_NAMES } = require('../lib/catalog');
+const { CATALOG, ARTS, MATS, CATS, SUBS, CL, SH, paletteFrom } = require('../lib/catalog');
+const HEX = /^#[0-9A-Fa-f]{6}$/;
+const colorRows = () => db('shop_colors?select=*&order=pos,hex').catch(() => null);
 const { orderText, keyboard, nextStatuses, orderNo, CUSTOMER_NOTE } = require('../lib/render');
 
 const key = () => crypto.createHash('sha256').update(`${env('ADMIN_PASSWORD')}|${env('WEBHOOK_SECRET')}`).digest();
@@ -28,14 +30,15 @@ module.exports = async (req, res) => {
     if (!okToken(req.headers['x-admin-token'])) return res.status(401).json({ error: 'unauthorized' });
 
     if (b.action === 'list') {
-      const [orders, customers, products, promos] = await Promise.all([
+      const [orders, customers, products, promos, crows] = await Promise.all([
         db('orders?select=*&order=created_at.desc&limit=500'),
         db('customers?select=telegram_id,phone,first_name,username,verified_at&order=verified_at.desc&limit=500'),
         db('shop_products?select=*&order=id').catch(() => null),
         db('promos?select=*&order=code').catch(() => null),
+        colorRows(),
       ]);
       const catalog = Object.entries(CATALOG).map(([id, p]) => ({ id: +id, name: p.uz, price: p.price }));
-      return res.status(200).json({ orders: orders || [], customers: customers || [], catalog, products, promos: promos || [], opts: { ARTS, MATS, CATS, SUBS, SIZES: { clothing: CL, shoes: SH }, COLORS: COLOR_NAMES } });
+      return res.status(200).json({ orders: orders || [], customers: customers || [], catalog, products, promos: promos || [], opts: { ARTS, MATS, CATS, SUBS, SIZES: { clothing: CL, shoes: SH }, COLORS: paletteFrom(crows), COLORS_DB: crows !== null } });
     }
 
     if (b.action === 'status') {
@@ -57,7 +60,8 @@ module.exports = async (req, res) => {
       const p = b.product || {};
       const int = (v, lo, hi) => { const n = Number(v); return Number.isInteger(n) && n >= lo && n <= hi ? n : null; };
       const name = { uz: String(p.name && p.name.uz || '').trim().slice(0, 60), ru: String(p.name && p.name.ru || '').trim().slice(0, 60) };
-      const colors = (Array.isArray(p.colors) ? p.colors : []).filter((h) => COLOR_NAMES[h]).slice(0, 6);
+      const palette = paletteFrom(await colorRows());
+      const colors = (Array.isArray(p.colors) ? p.colors : []).filter((h) => palette[h]).slice(0, 6);
       const price = int(p.price, 1000, 100000000), sale = int(p.sale || 0, 0, 90);
       const stock = p.stock === null || p.stock === '' || p.stock === undefined ? null : int(p.stock, 0, 100000);
       if (!name.uz || !name.ru || price === null || sale === null || (p.stock !== null && p.stock !== '' && p.stock !== undefined && stock === null) ||
@@ -101,6 +105,45 @@ module.exports = async (req, res) => {
     }
     if (b.action === 'product_delete') {
       await db(`shop_products?id=eq.${Number(b.id) | 0}`, { method: 'DELETE' }); clearShop();
+      return res.status(200).json({ ok: true });
+    }
+    if (b.action === 'color_save') {
+      const rows = await colorRows();
+      if (rows === null) return res.status(503).json({ error: 'no_colors_table' });
+      const hex = String(b.hex || '').toUpperCase(), old = b.old_hex ? String(b.old_hex).toUpperCase() : null;
+      const name = String(b.name || '').trim().slice(0, 30);
+      if (!HEX.test(hex) || !name) return res.status(400).json({ error: 'bad_color' });
+      const have = rows.find((r) => r.hex === hex), prev = old && rows.find((r) => r.hex === old);
+      if (old && !prev) return res.status(404).json({ error: 'not_found' });
+      if (!old && have) return res.status(409).json({ error: 'exists' });
+      if (old && hex !== old && have) return res.status(409).json({ error: 'exists' });
+      if (!old && rows.length >= 60) return res.status(400).json({ error: 'too_many' });
+      const pos = prev ? prev.pos : Math.max(0, ...rows.map((r) => r.pos || 0)) + 1;
+      await db('shop_colors?on_conflict=hex', { method: 'POST', prefer: 'resolution=merge-duplicates', body: { hex, name, pos } });
+      if (old && hex !== old) {
+        // the shade itself changed: move every product (and its photo tags) from the old shade to the new one
+        const prods = (await db('shop_products?select=id,colors,photos').catch(() => [])) || [];
+        for (const r of prods.filter((x) => Array.isArray(x.colors) && x.colors.includes(old))) {
+          await db(`shop_products?id=eq.${r.id}`, { method: 'PATCH', body: {
+            colors: r.colors.map((h) => (h === old ? hex : h)),
+            photos: (r.photos || []).map((x) => (x && typeof x === 'object' && x.c === old ? { ...x, c: hex } : x)),
+          } });
+        }
+        await db(`shop_colors?hex=eq.${encodeURIComponent(old)}`, { method: 'DELETE' });
+        clearShop();
+      }
+      return res.status(200).json({ ok: true });
+    }
+    if (b.action === 'color_delete') {
+      const rows = await colorRows();
+      if (rows === null) return res.status(503).json({ error: 'no_colors_table' });
+      const hex = String(b.hex || '').toUpperCase();
+      if (!rows.some((r) => r.hex === hex)) return res.status(404).json({ error: 'not_found' });
+      if (rows.length <= 1) return res.status(400).json({ error: 'last_color' });
+      const prods = (await db('shop_products?select=id,name,colors').catch(() => [])) || [];
+      const used = prods.filter((x) => Array.isArray(x.colors) && x.colors.includes(hex));
+      if (used.length) return res.status(409).json({ error: 'color_in_use', products: used.map((x) => (x.name && x.name.uz) || '#' + x.id) });
+      await db(`shop_colors?hex=eq.${encodeURIComponent(hex)}`, { method: 'DELETE' });
       return res.status(200).json({ ok: true });
     }
     if (b.action === 'promo_save') {

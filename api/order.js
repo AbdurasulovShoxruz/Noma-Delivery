@@ -2,7 +2,7 @@
 /* Creates an order: checks the Telegram signature, requires a verified phone, prices the cart on the server,
    saves it, posts it to the staff group (with status buttons and a map pin) and confirms to the customer. */
 const { env, tg, db, getShop, clearShop, verifyInitData, getCustomer, insertOrder, patchOrder } = require('../lib/common');
-const { priceOrder, inZone, toCatalog, CATALOG } = require('../lib/catalog');
+const { priceOrder, inZone, toCatalog, paletteFrom, CATALOG } = require('../lib/catalog');
 const { orderText, keyboard, orderNo, money } = require('../lib/render');
 
 const clean = (s, n) => String(s == null ? '' : s).replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, n);
@@ -19,7 +19,8 @@ module.exports = async (req, res) => {
 
     const type = b.type === 'pickup' ? 'pickup' : 'courier';
     const shop = await getShop();
-    const cat = shop ? toCatalog(shop) : CATALOG;
+    const palette = paletteFrom(await db('shop_colors?select=hex,name').catch(() => null));
+    const cat = shop ? toCatalog(shop, palette) : CATALOG;
     let pct = 0, promo = null;
     if (b.promo) {
       const code = String(b.promo).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20);
