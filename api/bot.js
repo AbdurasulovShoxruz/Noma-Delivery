@@ -1,7 +1,7 @@
 'use strict';
 /* Telegram webhook: /start, phone verification (contact share), staff status buttons, /chatid helper. */
 const {
-  env, tg, getCustomer, upsertCustomer, getOrder, patchOrder, normalizePhone,
+  env, tg, getCustomer, upsertCustomer, getOrder, patchOrder, normalizePhone, restoreStock,
 } = require('../lib/common');
 const { orderText, keyboard, nextStatuses, orderNo, CUSTOMER_NOTE } = require('../lib/render');
 
@@ -93,6 +93,7 @@ async function onCallback(q) {
   const by = [q.from.first_name, q.from.last_name].filter(Boolean).join(' ') || q.from.username || '';
   const updated = await patchOrder(order.id, { status: next, handled_by: by }, order.status);
   if (!updated) return answer('Holat allaqachon o‘zgargan');
+  if (next === 'cancelled') await restoreStock(updated);
   await tg('editMessageText', {
     chat_id: msg.chat.id,
     message_id: msg.message_id,

@@ -281,7 +281,10 @@ Object.assign(I.en,{onlyLeft:'Left:',sneakers:'Sneakers',boots:'Boots',search:'S
 const matText=p=>(p.matText&&(p.matText[S.lang]||p.matText.uz))||I[S.lang].skuMaterial[p.mat]||p.mat;
 const sOut=(p,s)=>!!p.sizeStock&&!(p.sizeStock[s]>0);
 const SUBOF={dress:'dresses',tee:'tops',shirt:'tops',hoodie:'knitwear',knit:'knitwear',trousers:'bottoms',shorts:'bottoms',skirt:'bottoms',coat:'outerwear',tote:'bags',scarf:'scarves',cap:'hats',sneaker:'sneakers',boot:'boots'};
-const subOf=p=>p.sub||SUBOF[p.art]||'tops';
+/* Categories and sections set in the admin panel (null = built-in lists) */
+let SECS=null;
+const sname=k=>{const e=SECS&&SECS.names[k];return e?(e[S.lang]||e.uz||k):t(k)};
+const subOf=p=>{const k=p.sub||SUBOF[p.art]||'tops';return (!SECS||SECS.subs.includes(k))?k:null};
 const SIZES=[['XS',84,66],['S',88,70],['M',92,74],['L',98,80],['XL',104,86]];
 const STORE={phone:'+998977775437',lat:41.3111,lon:69.2797};
 const CUR = {en:"so\u2019m",ru:"сум",uz:"so\u2019m"};
@@ -478,8 +481,8 @@ function home(){
   return `<section class="hero"><div class="kicker">${t('kicker')}</div><h1>${t('heroTitle')}</h1><p>${t('heroSub')}</p>
     <button class="pill" data-a="shop">${t('shopNow')}</button><button class="pill ghost" data-a="store">${t('ourStore')}</button></section>
     ${rails()}
-    <div class="chips" id="shop">${['all','women','men','accessories','shoes'].map(c=>`<button class="chip ${S.cat===c?'on':''}" data-a="cat" data-v="${c}">${t(c)}</button>`).join('')}</div>
-    ${S.cat!=='all'?`<div class="chips" style="padding-top:2px">${['all',...new Set(P.filter(p=>p.cat===S.cat).map(subOf))].map(c=>`<button class="chip ${S.sub===c?'on':''}" data-a="sub" data-v="${c}">${t(c)}</button>`).join('')}</div>`:''}
+    <div class="chips" id="shop">${['all',...(SECS?SECS.cats:['women','men','accessories','shoes'])].map(c=>`<button class="chip ${S.cat===c?'on':''}" data-a="cat" data-v="${c}">${c==='all'?t('all'):sname(c)}</button>`).join('')}</div>
+    ${S.cat!=='all'?`<div class="chips" style="padding-top:2px">${['all',...[...new Set(P.filter(p=>p.cat===S.cat).map(subOf))].filter(Boolean).sort((a,b)=>SECS?SECS.subs.indexOf(a)-SECS.subs.indexOf(b):0)].map(c=>`<button class="chip ${S.sub===c?'on':''}" data-a="sub" data-v="${c}">${c==='all'?t('all'):sname(c)}</button>`).join('')}</div>`:''}
     <div class="tools"><input class="inp" id="f-q" placeholder="${t('search')}" value="${S.q.replace(/"/g,'&quot;')}"><select class="inp" id="f-sort">${[['def','sortDef'],['low','sortLow'],['high','sortHigh']].map(([k,l])=>`<option value="${k}" ${S.sort===k?'selected':''}>${t(l)}</option>`).join('')}</select></div>
     <div class="grid" id="grid">${gridHtml()}</div>
     <p class="muted" style="text-align:center;margin:36px 0 0;font-size:12px">${t('freeOver')} ${fmt(FREE_OVER)}</p>
@@ -720,6 +723,10 @@ async function loadShop(){
       P.length=0;
       j.products.forEach(x=>P.push({id:x.id,cat:x.cat,art:x.art,mat:x.mat,price:x.price,old:x.old,stock:x.stock,sub:x.sub,photos:x.photos,isNew:!!x.isNew,sizeStock:x.sizeStock,matText:x.matText,sizes:x.sizes,colors:x.colors,name:{uz:x.name.uz,ru:x.name.ru,en:x.name.uz}}));
       S.bag=S.bag.filter(l=>pById(l.id)); save();
+    }
+    if(Array.isArray(j.sections)&&j.sections.length){
+      SECS={cats:[],subs:[],names:{}};
+      j.sections.forEach(r=>{(r.kind==='cat'?SECS.cats:SECS.subs).push(r.key);SECS.names[r.key]={uz:r.uz,ru:r.ru}});
     }
   }catch(e){}
 }
