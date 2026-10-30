@@ -1,7 +1,7 @@
 'use strict';
 /* Admin panel API. Login with ADMIN_PASSWORD (set in Vercel); returns a signed 12-hour token. */
 const crypto = require('crypto');
-const { env, tg, db, getOrder, patchOrder, clearShop, expireUnpaid, restoreStock } = require('../lib/common');
+const { env, tg, db, rateLimit, clientIp, getOrder, patchOrder, clearShop, expireUnpaid, restoreStock } = require('../lib/common');
 const { CATALOG, ARTS, MATS, CATS, SUBS, CL, SH, paletteFrom, sectionsFrom, parseSizes } = require('../lib/catalog');
 const HEX = /^#[0-9A-Fa-f]{6}$/;
 const sectionRows = () => db('shop_sections?select=*&order=pos,key').catch(() => null);
@@ -23,6 +23,7 @@ module.exports = async (req, res) => {
   const b = req.body || {};
   try {
     if (b.action === 'login') {
+      if (!rateLimit(`login:${clientIp(req)}`, 8, 10 * 60000)) return res.status(429).json({ error: 'too_many' });
       await new Promise((r) => setTimeout(r, 400)); // slows down guessing
       const given = crypto.createHash('sha256').update(String(b.password || '')).digest('hex');
       const real = crypto.createHash('sha256').update(env('ADMIN_PASSWORD')).digest('hex');
@@ -30,6 +31,27 @@ module.exports = async (req, res) => {
     }
     if (!okToken(req.headers['x-admin-token'])) return res.status(401).json({ error: 'unauthorized' });
 
+    if (b.action === 'courier') {
+      const order = await getOrder(Number(b.id));
+      const courier = String(b.courier || '').replace(/[<>&]/g, '').trim().slice(0, 40);
+      if (!order || order.type === 'pickup') return res.status(400).json({ error: 'bad_order' });
+      const u = await patchOrder(order.id, { courier: courier || null });
+      if (env('STAFF_CHAT_ID') && u.group_message_id) {
+        await tg('editMessageText', { chat_id: env('STAFF_CHAT_ID'), message_id: u.group_message_id, text: orderText(u), parse_mode: 'HTML', disable_web_page_preview: true, reply_markup: keyboard(u) }).catch(() => {});
+      }
+      return res.status(200).json({ ok: true });
+    }
+    if (b.action === 'broadcast') { // sends to verified customers in batches of 25; the admin page repeats until done
+      const text = String(b.text || '').trim().slice(0, 1000), off = Math.max(0, Number(b.offset) | 0);
+      if (text.length < 3) return res.status(400).json({ error: 'bad_text' });
+      const rows = (await db(`customers?select=telegram_id&order=telegram_id&offset=${off}&limit=25`)) || [];
+      const url = env('WEBAPP_URL') || (env('VERCEL_PROJECT_PRODUCTION_URL') ? `https://${env('VERCEL_PROJECT_PRODUCTION_URL')}/` : '');
+      let sent = 0;
+      await Promise.all(rows.map((r) => tg('sendMessage', { chat_id: r.telegram_id, text,
+        ...(url && b.button !== false ? { reply_markup: { inline_keyboard: [[{ text: '🛍 ' + (env('SHOP_NAME') || 'NOMA'), web_app: { url } }]] } } : {}) })
+        .then((x) => { if (x && x.ok) sent++; }).catch(() => {})));
+      return res.status(200).json({ sent, count: rows.length, next: off + rows.length, done: rows.length < 25 });
+    }
     if (b.action === 'track') {
       const order = await getOrder(Number(b.id));
       const track = String(b.track || '').replace(/[^\w\- ]/g, '').trim().slice(0, 40);
@@ -44,7 +66,7 @@ module.exports = async (req, res) => {
     if (b.action === 'list') {
       await expireUnpaid();
       const [orders, customers, products, promos, crows, srows] = await Promise.all([
-        db('orders?select=*&order=created_at.desc&limit=500'),
+        db('orders?select=*&order=created_at.desc&limit=3000'),
         db('customers?select=telegram_id,phone,first_name,username,verified_at&order=verified_at.desc&limit=500'),
         db('shop_products?select=*&order=id').catch(() => null),
         db('promos?select=*&order=code').catch(() => null),

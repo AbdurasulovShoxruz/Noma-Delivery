@@ -7,7 +7,7 @@ module.exports = async (req, res) => {
   res.setHeader('cache-control', 'no-store');
   const rows = await getShop();
   if (!rows) return res.status(200).json({ products: null });
-  const products = rows.filter((r) => r.active !== false).map((r) => ({
+  const products = rows.filter((r) => r.active !== false && r.stock !== 0).map((r) => ({
     id: r.id, cat: r.cat, art: r.art, mat: r.mat, sizes: r.sizes, colors: r.colors, name: r.name, stock: r.stock, sub: r.sub, photos: r.photos, isNew: r.is_new === true, sizeStock: r.size_stock, matText: r.mat_text,
     price: effPrice(r), old: r.sale ? r.price : 0,
   }));

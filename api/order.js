@@ -1,7 +1,7 @@
 'use strict';
 /* Creates an order: checks the Telegram signature, requires a verified phone, prices the cart on the server,
    saves it, posts it to the staff group (with status buttons and a map pin) and confirms to the customer. */
-const { env, tg, db, expireUnpaid, normalizePhone, getShop, clearShop, verifyInitData, getCustomer, insertOrder, patchOrder } = require('../lib/common');
+const { env, tg, db, rateLimit, expireUnpaid, normalizePhone, getShop, clearShop, verifyInitData, getCustomer, insertOrder, patchOrder } = require('../lib/common');
 const { priceOrder, inZone, toCatalog, paletteFrom, CATALOG, REGIONS } = require('../lib/catalog');
 const { orderText, keyboard, orderNo, money } = require('../lib/render');
 
@@ -14,6 +14,7 @@ module.exports = async (req, res) => {
   if (!user) return res.status(401).json({ error: 'bad_init_data' });
 
   try {
+    if (!rateLimit(`order:${user.id}`, 12, 60000)) return res.status(429).json({ error: 'too_many' });
     await expireUnpaid();
     const customer = await getCustomer(user.id);
     if (!customer) return res.status(403).json({ error: 'not_verified' });
@@ -94,6 +95,22 @@ module.exports = async (req, res) => {
       lang,
     });
     } catch (e) { await release(); throw e; }
+
+    try { // tell the staff group what just sold out (the shop hides sold-out products by itself)
+      if (shop && env('STAFF_CHAT_ID')) {
+        const out = [], total = {};
+        Object.keys(plain).forEach((id) => { const p = cat[id]; if (p && p.stock != null && p.stock - plain[id] <= 0) out.push(`• ${p.uz} — butunlay tugadi`); });
+        Object.keys(bySize).forEach((k) => {
+          const [id, sz] = k.split('|'), p = cat[id]; total[id] = (total[id] || 0) + bySize[k];
+          if ((Number(p.sizeStock[sz]) || 0) - bySize[k] <= 0) out.push(`• ${p.uz} — ${sz} o‘lchami tugadi`);
+        });
+        Object.keys(total).forEach((id) => {
+          const p = cat[id], left = Object.values(p.sizeStock).reduce((a, v) => a + (Number(v) || 0), 0) - total[id];
+          if (left <= 0) out.push(`• ${p.uz} — butunlay tugadi`);
+        });
+        if (out.length) await tg('sendMessage', { chat_id: env('STAFF_CHAT_ID'), text: `⚠️ Omborda tugadi:\n${[...new Set(out)].join('\n')}\n\nTugagan mahsulot do‘kondan avtomatik yashiriladi.` });
+      }
+    } catch (e) { console.error('stockout', e.message); }
 
     try { // count the promo use
       if (promo) { const u = (await db(`promos?code=eq.${promo}&select=used`))[0]; await db(`promos?code=eq.${promo}`, { method: 'PATCH', body: { used: ((u && u.used) || 0) + 1 } }); }

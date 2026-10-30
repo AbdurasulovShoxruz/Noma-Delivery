@@ -145,6 +145,8 @@ input,select{font:inherit;color:inherit}
 .toast{position:fixed;left:50%;bottom:96px;transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:11px 20px;border-radius:999px;
   font-size:13px;opacity:0;pointer-events:none;transition:.22s;z-index:80;white-space:nowrap}
 .toast.on{opacity:1;transform:translate(-50%,0)}
+.toast.top{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 64px);transform:translate(-50%,-20px)}.toast.top.on{transform:translate(-50%,0)}
+.banner{margin:0 0 14px;padding:10px 16px;background:var(--ink);color:var(--bg);text-align:center;font-size:13px;border-radius:var(--r)}
 .empty{text-align:center;padding:70px 0}
 .empty h2{font-family:var(--serif);font-style:italic;font-weight:500;font-size:34px;margin:0 0 8px}
 .map-wrap{position:relative;isolation:isolate;border-radius:var(--r);overflow:hidden;height:280px;border:1px solid var(--line);margin-top:2px}
@@ -220,7 +222,9 @@ input,select{font:inherit;color:inherit}
 <div class="sheet" id="sheet"></div>
 <div class="toast" id="toast"></div>
 
+<script src="/config.js"></script>
 <script>
+const CFG = window.NOMA_CONFIG;
 /* ---------- Telegram ---------- */
 const tg = window.Telegram && window.Telegram.WebApp;
 const inTG = !!(tg && tg.initData);
@@ -263,9 +267,9 @@ uz:{newProducts:'Yangi mahsulotlar',discProducts:'Chegirmali mahsulotlar',newTag
  details:'Ma\u2019lumotlaringiz',req:'To\u2018ldiring',freeOver:'Bepul yetkazish',items:'dona',pickDistrict:'Tumanni tanlang',back:'Orqaga',added:'Savatga qo\u2018shildi',
  payNote:'Demo rejim: haqiqiy to\u2018lov olinmaydi.',skuMaterial:{linen:'100% zig\u2018ir',cotton:'100% organik paxta',wool:'Jun aralashmasi',knit:'Merinos juni',canvas:'Qalin kanvas',viscose:'Viskoza krep',leather:'Tabiiy teri',suede:'Zamsh',mesh:'To\u2018r mato',synthetic:'Sintetika',denim:'Jinsi',silk:'Ipak'}}
 };
-Object.assign(I.uz,{favs:'Sevimlilar',favEmpty:'Sevimlilar bo\u2018sh',favEmptySub:'Yurak belgisini bosib saqlang.',store:'Do\u2018kon',ourStore:'Do\u2018konimiz',since:'2020-yildan beri',address:'Manzil',hours:'Ish vaqti',call:'Qo\u2018ng\u2018iroq qilish',openMap:'Xaritada ochish',storeAddr:'Amir Temur ko\u2018chasi 15, Toshkent',storeHours:'Har kuni 10:00 \u2013 22:00',storeAbout:'NOMA 2020-yildan beri Toshkentda tabiiy matolardan sokin kiyimlar tikadi.',freeLeft:'Bepul yetkazish uchun yana',freeOk:'Bepul yetkazish ochildi',saveFav:'Sevimlilarga',lineTotal:'Jami',theme:'Mavzu'});
-Object.assign(I.ru,{favs:'Избранное',favEmpty:'В избранном пусто',favEmptySub:'Нажмите на сердце, чтобы сохранить.',store:'Магазин',ourStore:'Наш магазин',since:'С 2020 года',address:'Адрес',hours:'Часы работы',call:'Позвонить',openMap:'Открыть на карте',storeAddr:'ул. Амира Темура 15, Ташкент',storeHours:'Ежедневно 10:00 \u2013 22:00',storeAbout:'NOMA с 2020 года шьёт спокойную одежду из натуральных тканей в Ташкенте.',freeLeft:'До бесплатной доставки',freeOk:'Бесплатная доставка включена',saveFav:'В избранное',lineTotal:'Сумма',theme:'Тема'});
-Object.assign(I.en,{favs:'Favourites',favEmpty:'No favourites yet',favEmptySub:'Tap the heart to save items.',store:'Store',ourStore:'Our store',since:'Since 2020',address:'Address',hours:'Opening hours',call:'Call us',openMap:'Open in maps',storeAddr:'Amir Temur street 15, Tashkent',storeHours:'Daily 10:00 \u2013 22:00',storeAbout:'Since 2020 NOMA has made quiet clothes from natural fabrics in Tashkent.',freeLeft:'Left for free delivery',freeOk:'Free delivery unlocked',saveFav:'Save',lineTotal:'Total',theme:'Theme'});
+Object.assign(I.uz,{favs:'Sevimlilar',favEmpty:'Sevimlilar bo\u2018sh',favEmptySub:'Yurak belgisini bosib saqlang.',store:'Do\u2018kon',ourStore:'Do\u2018konimiz',since:'2020-yildan beri',address:'Manzil',hours:'Ish vaqti',call:'Qo\u2018ng\u2018iroq qilish',openMap:'Xaritada ochish',storeAddr:CFG.store.addr.uz,storeHours:CFG.store.hours.uz,storeAbout:'NOMA 2020-yildan beri Toshkentda tabiiy matolardan sokin kiyimlar tikadi.',freeLeft:'Bepul yetkazish uchun yana',freeOk:'Bepul yetkazish ochildi',saveFav:'Sevimlilarga',lineTotal:'Jami',theme:'Mavzu'});
+Object.assign(I.ru,{favs:'Избранное',favEmpty:'В избранном пусто',favEmptySub:'Нажмите на сердце, чтобы сохранить.',store:'Магазин',ourStore:'Наш магазин',since:'С 2020 года',address:'Адрес',hours:'Часы работы',call:'Позвонить',openMap:'Открыть на карте',storeAddr:CFG.store.addr.ru,storeHours:CFG.store.hours.ru,storeAbout:'NOMA с 2020 года шьёт спокойную одежду из натуральных тканей в Ташкенте.',freeLeft:'До бесплатной доставки',freeOk:'Бесплатная доставка включена',saveFav:'В избранное',lineTotal:'Сумма',theme:'Тема'});
+Object.assign(I.en,{favs:'Favourites',favEmpty:'No favourites yet',favEmptySub:'Tap the heart to save items.',store:'Store',ourStore:'Our store',since:'Since 2020',address:'Address',hours:'Opening hours',call:'Call us',openMap:'Open in maps',storeAddr:CFG.store.addr.en,storeHours:CFG.store.hours.en,storeAbout:'Since 2020 NOMA has made quiet clothes from natural fabrics in Tashkent.',freeLeft:'Left for free delivery',freeOk:'Free delivery unlocked',saveFav:'Save',lineTotal:'Total',theme:'Theme'});
 Object.assign(I.uz,{promo:'Promo-kod',apply:'Qo\u2018llash',badPromo:'Promo-kod topilmadi',soldOut:'Qolmagan',outOfStock:'Omborda yetarli emas'});
 Object.assign(I.ru,{promo:'Промокод',apply:'Применить',badPromo:'Промокод не найден',soldOut:'Нет в наличии',outOfStock:'Недостаточно на складе'});
 Object.assign(I.en,{promo:'Promo code',apply:'Apply',badPromo:'Promo code not found',soldOut:'Sold out',outOfStock:'Not enough in stock'});
@@ -282,13 +286,15 @@ const matText=p=>(p.matText&&(p.matText[S.lang]||p.matText.uz))||I[S.lang].skuMa
 const sOut=(p,s)=>!!p.sizeStock&&!(p.sizeStock[s]>0);
 Object.assign(I.uz,{vPhoneNote:'Telegramdagi tasdiqlangan raqamingiz. Xohlasangiz o\u2018zgartiring.',viloyat:'Viloyatga',viloyatSub:'BTS Express',vilPrepaid:'100% oldindan to\u2018lov',vilBts:'Viloyatlarga yetkazish faqat BTS Express xizmati orqali amalga oshiriladi. Avval to\u2018lov qilinadi, keyin buyurtma qabul qilinadi.',payNow:'To\u2018lov qilish',payTitle:'Onlayn to\u2018lov',payWith:'To\u2018lov usuli',payDemo:'Demo: haqiqiy loyihada Click / Payme to\u2018lov sahifasi ochiladi.',payBtn:'To\u2018lash',vTitle:'Yetkazish ma\u2019lumotlari',vPaid:'To\u2018lov qabul qilindi',region:'Viloyat',pickRegion:'Viloyatni tanlang',vAddress:'Manzil yoki BTS filiali',vSubmit:'Buyurtmani tasdiqlash',btsDone:'BTS Express orqali yuboriladi. Kuzatuv raqamini shu yerga yuboramiz.',vFill:'Ma\u2019lumotlarni to\u2018ldirish',vExpired:'To\u2018lov vaqti tugadi, buyurtma bekor qilindi',payOff:'Onlayn to\u2018lov ulanmagan',st_paid:'To\u2018landi',st_awaiting_payment:'To\u2018lov kutilmoqda'});
 Object.assign(I.ru,{vPhoneNote:'Ваш подтверждённый номер в Telegram. Можно изменить.',viloyat:'В регионы',viloyatSub:'BTS Express',vilPrepaid:'100% предоплата',vilBts:'Доставка в регионы осуществляется только службой BTS Express. Сначала оплата, затем заказ принимается.',payNow:'Оплатить',payTitle:'Онлайн-оплата',payWith:'Способ оплаты',payDemo:'Демо: в реальном проекте откроется страница оплаты Click / Payme.',payBtn:'Оплатить',vTitle:'Данные для доставки',vPaid:'Оплата получена',region:'Область',pickRegion:'Выберите область',vAddress:'Адрес или филиал BTS',vSubmit:'Подтвердить заказ',btsDone:'Отправим через BTS Express. Номер отслеживания пришлём сюда.',vFill:'Заполнить данные',vExpired:'Время оплаты истекло, заказ отменён',payOff:'Онлайн-оплата не подключена',st_paid:'Оплачен',st_awaiting_payment:'Ожидает оплаты'});
+Object.assign(I.uz,{qolmadi:'Qolmadi',notPaidYet:'To\u2018lov hali tasdiqlanmadi',checkPay:'To\u2018lovni tekshirish',cancelOrder:'Buyurtmani bekor qilish',cancelled:'Buyurtma bekor qilindi',share:'Do\u2018stga yuborish',recent:'Yaqinda ko\u2018rilgan',tooMany:'Juda ko\u2018p urinish, birozdan keyin qayta urining'});
+Object.assign(I.ru,{qolmadi:'Больше нет в наличии',notPaidYet:'Оплата ещё не подтверждена',checkPay:'Проверить оплату',cancelOrder:'Отменить заказ',cancelled:'Заказ отменён',share:'Отправить другу',recent:'Недавно просмотренные',tooMany:'Слишком много попыток, повторите позже'});
 const SUBOF={dress:'dresses',tee:'tops',shirt:'tops',hoodie:'knitwear',knit:'knitwear',trousers:'bottoms',shorts:'bottoms',skirt:'bottoms',coat:'outerwear',tote:'bags',scarf:'scarves',cap:'hats',sneaker:'sneakers',boot:'boots'};
 /* Categories and sections set in the admin panel (null = built-in lists) */
 let SECS=null;
 const sname=k=>{const e=SECS&&SECS.names[k];return e?(e[S.lang]||e.uz||k):t(k)};
 const subOf=p=>{const k=p.sub||SUBOF[p.art]||'tops';return (!SECS||SECS.subs.includes(k))?k:null};
 const SIZES=[['XS',84,66],['S',88,70],['M',92,74],['L',98,80],['XL',104,86]];
-const STORE={phone:'+998977775437',lat:41.3111,lon:69.2797};
+const STORE={phone:CFG.phone,lat:CFG.store.lat,lon:CFG.store.lon};
 const CUR = {en:"so\u2019m",ru:"сум",uz:"so\u2019m"};
 Object.assign(I.uz,{
  verifyTitle:'Raqamingizni tasdiqlang',
@@ -349,7 +355,7 @@ const P = [
  {id:15,cat:'shoes',art:'sneaker',price:359000,mat:'canvas',sizes:SH,colors:['#FFFFFF', '#181818', '#B8A88F'],
   name:{en:'Canvas Sneakers',ru:'Холщовые кеды',uz:'Kanvas krossovkalar'}}
 ];
-const DELIVERY_FEE = 25000, FREE_OVER = 500000, VILOYAT_FEE = 35000;
+const DELIVERY_FEE = CFG.fees.delivery, FREE_OVER = CFG.fees.freeOver, VILOYAT_FEE = CFG.fees.viloyat;
 const REGIONS = ["Qoraqalpog‘iston Respublikasi", "Andijon viloyati", "Buxoro viloyati", "Farg‘ona viloyati", "Jizzax viloyati", "Xorazm viloyati", "Namangan viloyati", "Navoiy viloyati", "Qashqadaryo viloyati", "Samarqand viloyati", "Sirdaryo viloyati", "Surxondaryo viloyati", "Toshkent viloyati"];
 const qa = x => String(x==null?'':x).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 
@@ -407,7 +413,7 @@ const S = {
   co:{name:(tgUser&&[tgUser.first_name,tgUser.last_name].filter(Boolean).join(' '))||'',phone:'',type:'courier',district:'',address:'',pay:'cash',lat:null,lon:null,pin:false},
   favs:(()=>{ try{ return JSON.parse(localStorage.getItem('noma_favs')||'[]'); }catch(e){ return []; } })(),
   theme:(()=>{ try{ const s=localStorage.getItem('noma_theme'); if(s==='dark'||s==='light') return s; }catch(e){} return (tg&&tg.colorScheme)||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'); })(),
-  promo:null, vm:0, vo:null, vf:{region:'',tuman:'',name:'',phone:'',address:''}, q:'', sort:'def', sub:'all', myOrders:null, err:{}, order:null, live:false, verified:false, phone:'', bot:'', demoNote:false, busy:false, addrAuto:true, verifyMsg:'', map:null
+  rv:(()=>{ try{ return JSON.parse(localStorage.getItem('noma_rv')||'[]'); }catch(e){ return []; } })(), promo:null, vm:0, vo:null, vf:{region:'',tuman:'',name:'',phone:'',address:''}, q:'', sort:'def', sub:'all', myOrders:null, err:{}, order:null, live:false, verified:false, phone:'', bot:'', demoNote:false, busy:false, addrAuto:true, verifyMsg:'', map:null
 };
 const t = k => (I[S.lang][k] ?? I.uz[k] ?? k);
 const $ = s => document.querySelector(s);
@@ -428,7 +434,7 @@ const isFav = id => S.favs.includes(id);
 function toggleFav(id){ S.favs=isFav(id)?S.favs.filter(x=>x!==id):[...S.favs,id]; try{ localStorage.setItem('noma_favs',JSON.stringify(S.favs)); }catch(e){} haptic(); }
 const heart = id => `<button class="hrt ${isFav(id)?'on':''}" data-a="fav" data-v="${id}" aria-label="${t('favs')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.4 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/></svg></button>`;
 
-function toast(msg){ const el=$('#toast'); el.textContent=msg; el.classList.add('on'); clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove('on'),1600); }
+function toast(msg,top){ const el=$('#toast'); el.textContent=msg; el.classList.toggle('top',!!(top||msg===t('qolmadi')||msg===t('outOfStock'))); el.classList.add('on'); clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove('on'),1600); }
 function go(v){ S.nav.push(v); render(); window.scrollTo(0,0); }
 function back(){ if(S.nav.length>1){ S.nav.pop(); render(); window.scrollTo(0,0);} }
 
@@ -474,6 +480,10 @@ function sketchMap(){
 </svg>`;
 }
 /* Home sections: New Products (flag set in the admin panel) and Discounted Products (any product with a discount). */
+function recent(){
+  if(S.cat!=='all') return ''; const L=S.rv.map(pById).filter(Boolean).slice(0,8);
+  return L.length?`<section class="rsec"><h3>${t('recent')}</h3><div class="rail">${L.map(card).join('')}</div></section>`:'';
+}
 function rails(){
   if(S.cat!=='all') return '';
   const nw=P.filter(p=>p.isNew).sort((a,b)=>b.id-a.id);
@@ -482,9 +492,10 @@ function rails(){
   return rail(t('newProducts'),nw)+rail(t('discProducts'),ds);
 }
 function home(){
-  return `<section class="hero"><div class="kicker">${t('kicker')}</div><h1>${t('heroTitle')}</h1><p>${t('heroSub')}</p>
+  const bn=CFG.banner&&CFG.banner[S.lang]?`<div class="banner">${CFG.banner[S.lang]}</div>`:'';
+  return `${bn}<section class="hero"><div class="kicker">${t('kicker')}</div><h1>${t('heroTitle')}</h1><p>${t('heroSub')}</p>
     <button class="pill" data-a="shop">${t('shopNow')}</button><button class="pill ghost" data-a="store">${t('ourStore')}</button></section>
-    ${rails()}
+    ${rails()}${recent()}
     <div class="chips" id="shop">${['all',...(SECS?SECS.cats:['women','men','accessories','shoes'])].map(c=>`<button class="chip ${S.cat===c?'on':''}" data-a="cat" data-v="${c}">${c==='all'?t('all'):sname(c)}</button>`).join('')}</div>
     ${S.cat!=='all'?`<div class="chips" style="padding-top:2px">${['all',...[...new Set(P.filter(p=>p.cat===S.cat).map(subOf))].filter(Boolean).sort((a,b)=>SECS?SECS.subs.indexOf(a)-SECS.subs.indexOf(b):0)].map(c=>`<button class="chip ${S.sub===c?'on':''}" data-a="sub" data-v="${c}">${c==='all'?t('all'):sname(c)}</button>`).join('')}</div>`:''}
     <div class="tools"><input class="inp" id="f-q" placeholder="${t('search')}" value="${S.q.replace(/"/g,'&quot;')}"><select class="inp" id="f-sort">${[['def','sortDef'],['low','sortLow'],['high','sortHigh']].map(([k,l])=>`<option value="${k}" ${S.sort===k?'selected':''}>${t(l)}</option>`).join('')}</select></div>
@@ -510,7 +521,7 @@ function favsView(){
   return head+`<div class="grid">${list.map(card).join('')}</div>`;
 }
 function storeView(){
-  const tel=STORE.phone, show='+998 97 777 54 37';
+  const tel=STORE.phone, show=CFG.phoneShown;
   return `<div class="backrow"><button class="link" data-a="back">\u2190 ${t('back')}</button></div>
   <div class="kicker">${t('since')}</div><h2 style="font-family:var(--serif);font-weight:500;font-size:40px;line-height:1.05;margin:8px 0 10px">NOMA</h2>
   <p class="muted" style="margin:0 0 18px">${t('storeAbout')}</p>
@@ -546,13 +557,14 @@ function ordersView(){
   return head+L.map(o=>`<div class="irow" style="flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between"><b style="font-weight:500">${o.no}</b><span>${t('st_'+o.status)}</span></div>
    <div class="muted small">${new Date(o.at).toLocaleDateString(S.lang==='ru'?'ru-RU':'en-GB')} \u00B7 ${fmt(o.total)}</div><div style="color:var(--ink);font-size:13px">${o.items.map(l=>`${l.qty} \u00D7 ${l.name}${l.size?' ('+l.size+')':''}`).join(', ')}</div>
    ${o.track?`<div class="muted small">BTS Express \u00B7 ${o.track}</div>`:''}
+   ${(o.type==='viloyat'?o.status==='awaiting_payment':o.status==='new')?`<button class="link" data-a="cancelorder" data-v="${o.id}" style="margin-top:6px;text-align:left">${t('cancelOrder')}</button>`:''}
    ${o.type==='viloyat'&&o.status==='awaiting_payment'?`<div><button class="pill sm" data-a="vresume" data-v="${o.id}" style="margin-top:6px">${t('payNow')}</button></div>`:''}</div>`).join('');
 }
 function pdp(){
   const p = pById(S.pid); const c = p.colors[S.sel.color];
   return `<div class="backrow"><button class="link" data-a="back">\u2190 ${t('back')}</button></div>
   <div class="pdp"><div class="art gal">${heart(p.id)}${gallery(p,c)}</div>${S.sel.cpick&&pphotos(p).length>colorPhotos(p,c).length?`<div class="allph"><button class="link" data-a="allph">${t('allPhotos')}</button></div>`:''}
-  <h2>${p.name[S.lang]}</h2><div class="price">${p.old?`<s class="muted">${fmt(p.old)}</s> `:''}${fmt(p.price)}</div>
+  <h2>${p.name[S.lang]}</h2><div class="price">${p.old?`<s class="muted">${fmt(p.old)}</s> `:''}${fmt(p.price)}</div><button class="link" data-a="share" style="margin-top:6px;text-decoration:underline">${t('share')}</button>
   <div class="label">${t('color')}</div><div class="opts">${p.colors.map((h,i)=>`<button class="sw ${S.sel.color===i?'on':''}" style="background:${h}" data-a="color" data-v="${i}" aria-label="${h}"></button>`).join('')}</div>
   <div class="label">${t('size')}</div><div class="opts">${p.sizes?p.sizes.map(s=>`<button class="opt ${S.sel.size===s?'on':''}" ${sOut(p,s)?'disabled':''} data-a="size" data-v="${s}">${s}</button>`).join(''):`<button class="opt on">${t('oneSize')}</button>`}</div>
   ${S.sel.size&&p.sizeStock&&p.sizeStock[S.sel.size]>0&&p.sizeStock[S.sel.size]<=3?`<div class="muted small" style="margin-top:8px">${t('onlyLeft')} ${p.sizeStock[S.sel.size]}</div>`:''}
@@ -616,6 +628,12 @@ function checkout(){
   ${disc()?`<div><span class="muted">${S.promo.code} \u2212${S.promo.percent}%</span><span>\u2212${fmt(disc())}</span></div>`:''}<div class="tot"><span>${t('total')}</span><span>${fmt(sub-disc()+fee)}</span></div></div>
   <div class="dock"><button class="pill full" data-a="place" ${S.busy?'disabled':''}>${S.busy?t('sending'):`${c.type==='viloyat'?t('payNow'):t('placeOrder')} · ${fmt(sub-disc()+fee)}`}</button></div>`;
 }
+function finishVil(no){
+  const o=S.vo, f=S.vf; if(!o) return;
+  S.order={live:S.live,viloyat:true,no:no||o.no,total:o.total,name:o.name||S.co.name,phone:f.phone,type:'viloyat',address:`${f.region}, ${f.tuman}`,items:o.items||[]};
+  S.busy=false; S.vo=null; S.vf={region:'',tuman:'',name:'',phone:'',address:''}; S.nav=['home','done']; render(); window.scrollTo(0,0);
+  try{ tg.HapticFeedback.notificationOccurred('success'); }catch(x){}
+}
 function payView(){
   const o=S.vo;
   return `<h2 style="font-family:var(--serif);font-weight:500;font-size:34px;margin:0">${t('payTitle')}</h2>
@@ -637,7 +655,8 @@ function orderFail(err){
   S.busy=false; const code=err&&err.json&&err.json.error;
   if(code==='not_verified'){ S.verified=false; S.nav=['verify']; render(); return; }
   if(code==='bad_promo') S.promo=null;
-  render(); toast(code==='outside_zone'?t('outsideZone'):code==='out_of_stock'?t('outOfStock'):code==='bad_promo'?t('badPromo'):code==='expired'?t('vExpired'):code==='payments_not_connected'?t('payOff'):t('errGeneric'));
+  if(code==='out_of_stock') loadShop().then(()=>render());
+  render(); toast(code==='too_many'?t('tooMany'):code==='outside_zone'?t('outsideZone'):code==='out_of_stock'?t('outOfStock'):code==='bad_promo'?t('badPromo'):code==='expired'?t('vExpired'):code==='payments_not_connected'?t('payOff'):t('errGeneric'));
 }
 async function placeVil(){
   const c=S.co; S.busy=true; render();
@@ -684,7 +703,10 @@ function drawSheet(){
 }
 function closeSheet(){ S.sheet=null; $('#scrim').classList.remove('on'); $('#sheet').classList.remove('on'); }
 
+const availOf=(p,size)=>p.sizeStock?(Number(p.sizeStock[size])||0):(p.stock==null?Infinity:p.stock);
+const haveInBag=(id,size)=>S.bag.filter(l=>l.id===id&&l.size===size).reduce((a,l)=>a+l.qty,0);
 function addLine(id,size,color){
+  const pp=pById(id); if(pp&&haveInBag(id,size)+1>availOf(pp,size)){ toast(t('qolmadi'),true); haptic('heavy'); return; }
   const f=S.bag.find(l=>l.id===id&&l.size===size&&l.color===color);
   if(f) f.qty++; else S.bag.push({id,size,color,qty:1});
   save(); topbar(); haptic('medium'); toast(t('added'));
@@ -887,7 +909,7 @@ document.addEventListener('click',ev=>{
     case 'sizes': go('sizes'); break;
     case 'orders': api('/api/orders',{initData:tg.initData}).then(r=>{ S.myOrders=r.orders; go('orders'); }).catch(()=>toast(t('errGeneric'))); break;
     case 'shop': document.getElementById('shop').scrollIntoView({behavior:'smooth'}); break;
-    case 'open': S.pid=+v; S.sel={size:null,color:0,cpick:false}; haptic(); go('pdp'); break;
+    case 'open': S.rv=[+v,...S.rv.filter(x=>x!==+v)].slice(0,8); try{ localStorage.setItem('noma_rv',JSON.stringify(S.rv)); }catch(e){} S.pid=+v; S.sel={size:null,color:0,cpick:false}; haptic(); go('pdp'); break;
     case 'quick': openSheet(+v); break;
     case 'scolor': S.sheet.color=+v; drawSheet(); break;
     case 'ssize': S.sheet.size=v; drawSheet(); break;
@@ -899,7 +921,7 @@ document.addEventListener('click',ev=>{
     case 'addpdp': { const p=pById(S.pid); if(p.sizes&&!S.sel.size){ toast(t('size')+'?'); haptic('heavy'); break; } addLine(p.id,p.sizes?S.sel.size:null,S.sel.color); break; }
     case 'back': back(); break;
     case 'home': S.nav=['home']; render(); window.scrollTo(0,0); break;
-    case 'inc': S.bag[+v].qty++; save(); render(); break;
+    case 'inc': { const l=S.bag[+v], pp=pById(l.id); if(pp&&haveInBag(l.id,l.size)+1>availOf(pp,l.size)){ toast(t('qolmadi'),true); haptic('heavy'); break; } l.qty++; save(); render(); break; }
     case 'dec': if(S.bag[+v].qty>1) S.bag[+v].qty--; else S.bag.splice(+v,1); save(); render(); break;
     case 'del': S.bag.splice(+v,1); save(); render(); break;
     case 'tocheckout': S.err={}; go('checkout'); break;
@@ -907,9 +929,10 @@ document.addEventListener('click',ev=>{
     case 'vmethod': S.vm=+v; render(); break;
     case 'dopay': {
       if(S.busy||!S.vo) break; S.busy=true; render();
-      const fin=no=>{ const o=S.vo, f=S.vf; S.order={live:S.live,viloyat:true,no:no||o.no,total:o.total,name:o.name||S.co.name,phone:f.phone,type:'viloyat',address:`${f.region}, ${f.tuman}`,items:o.items||[]}; S.busy=false; S.vo=null; S.vf={region:'',tuman:'',name:'',phone:'',address:''}; S.nav=['home','done']; render(); window.scrollTo(0,0); try{ tg.HapticFeedback.notificationOccurred('success'); }catch(x){} };
-      if(!S.live||!S.vo.id){ setTimeout(()=>fin(),700); break; }
-      api('/api/pay',{initData:tg.initData,id:S.vo.id}).then(r=>fin(r.no)).catch(orderFail); break; }
+      if(!S.live||!S.vo.id){ setTimeout(()=>finishVil(),700); break; }
+      api('/api/pay',{initData:tg.initData,id:S.vo.id}).then(r=>finishVil(r.no)).catch(orderFail); break; }
+    case 'cancelorder': api('/api/cancel',{initData:tg.initData,id:+v}).then(()=>{ toast(t('cancelled')); return api('/api/orders',{initData:tg.initData}); }).then(r=>{ S.myOrders=r.orders; render(); }).catch(()=>toast(t('errGeneric'))); break;
+    case 'share': { const p=pById(S.pid); const u='https://t.me/share/url?url='+encodeURIComponent(location.origin)+'&text='+encodeURIComponent(p.name[S.lang]+' \u2014 '+CFG.brand); try{ tg.openTelegramLink(u); }catch(e){ window.open(u,'_blank'); } break; }
     case 'vresume': { const o=(S.myOrders||[]).find(x=>x.id===+v); if(!o) break; S.vo={id:o.id,no:o.no,total:o.total}; S.nav=['home','pay']; render(); window.scrollTo(0,0); break; }
     case 'pay': S.co.pay=v; render(); break;
     case 'share': shareNumber(); break;

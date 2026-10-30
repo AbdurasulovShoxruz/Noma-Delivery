@@ -152,3 +152,13 @@ Run `supabase-sizes.sql` in the Supabase SQL Editor (after the other SQL files),
 3. In the admin panel, tab **Dostavka viloyat**, open an order, type the BTS tracking number and press **Sent via BTS** (or **Save**); the customer gets a message with the number and sees it in My orders.
 4. An order that is not paid within 30 minutes is cancelled and its stock is given back.
 5. The payment in this demo is simulated (`api/pay.js`: any signed-in customer can mark their own order as paid). For a real client, connect Click / Payme and set the order to paid only from their server callback; set `DEMO_PAYMENTS` to `off` in Vercel to switch the demo payment off. A paid order that you cancel has to be refunded by hand.
+
+## Latest additions
+
+1. **Supabase:** run `supabase-extra.sql` (courier name on orders). Push and wait for Ready.
+2. **One config file per client:** `config.js` holds the brand name, phone, address, opening hours, map coordinates, delivery fees (courier, free-delivery limit, Viloyat) and an optional home-page banner (`banner`). The shop and the server both read it. Product names, prices and colours are still managed in the admin panel.
+3. **Sold-out rules:** when a customer asks for more than is in stock (also per size), a "Qolmadi" pop-up appears at the top. A product with 0 stock is hidden from the shop automatically and comes back when stock returns (restock or a cancelled order). When an order sells the last piece (or the last piece of one size), your staff group gets a "⚠️ Omborda tugadi" message, and the admin panel shows a red banner, a badge on **Products**, and a new-order notice with the number in the browser tab title.
+4. **Analytics tab:** revenue, orders, average order, units, repeat customers, cancel rate and discounts with a comparison to the previous period; revenue per day, week or month; orders by hour and weekday; top products; sales by category; delivery types, payment methods, regions, best customers, promo codes; and a few plain-language insights.
+5. **Broadcast tab:** send a bot message (with an optional "Open the shop" button) to all verified customers. It sends in batches and shows progress.
+6. **Payments:** the online payment for Viloyat orders is a demo (Click / Payme screen, no real money). There is no real Click or Payme connection; `DEMO_PAYMENTS=off` in Vercel switches the demo off.
+7. **Also new:** customers can cancel their own order from My orders while it is still new (Viloyat: while unpaid); a courier name field on orders (shown in the staff group message); rate limits on admin login, orders, payments; a share button on products; a "recently viewed" row on the home page.
