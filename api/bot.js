@@ -3,7 +3,7 @@
 const {
   env, tg, getCustomer, upsertCustomer, getOrder, patchOrder, normalizePhone, restoreStock,
 } = require('../lib/common');
-const { orderText, keyboard, nextStatuses, orderNo, CUSTOMER_NOTE } = require('../lib/render');
+const { orderText, keyboard, nextStatuses, orderNo, customerNote } = require('../lib/render');
 
 const T = {
   uz: {
@@ -103,7 +103,7 @@ async function onCallback(q) {
     reply_markup: keyboard(updated),
   });
   await answer('✓');
-  const note = CUSTOMER_NOTE[next][updated.lang === 'ru' ? 'ru' : 'uz'](orderNo(updated.id));
+  const note = customerNote(updated, next);
   await tg('sendMessage', { chat_id: updated.telegram_id, text: note });
 }
 

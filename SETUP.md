@@ -144,3 +144,11 @@ Run `supabase-sizes.sql` in the Supabase SQL Editor (after the other SQL files),
 - Run `supabase-categories.sql` once too: it creates the category and section lists managed in the admin panel (Sections tab).
 - **Stock for each size**: in the product editor choose Sizes (Clothing or Shoes), tick **Stock for each size**, and type a number for every size, for example M 6, S 2, XL empty. An empty size or 0 is greyed out and crossed out in the shop and cannot be ordered. The total stock is the sum of the sizes. Each order lowers only the size that was bought, and it is locked in the database, so the last piece cannot be sold twice. A size with 3 or fewer pieces shows "Left: N" on the product page.
 - **Material**: the list now also has Leather, Suede, Mesh, Synthetic, Denim and Silk. Choose **other** to type your own text in Uzbek and Russian; the shop shows exactly that text.
+
+## Delivery to the regions (Viloyat, BTS Express)
+
+1. In Supabase SQL Editor run `supabase-viloyat.sql` (adds the region, district, recipient phone, payment time and BTS tracking columns). Push the code and wait for Vercel to show **Ready**.
+2. How it works for the customer: in checkout they choose **Viloyatga · BTS Express** (100% prepayment). They pay online first; only then a form opens for the region, district, name, phone and address or BTS branch. Delivery is a flat 35 000 so'm (`VILOYAT_FEE` in `lib/catalog.js` and `index.html`; change both).
+3. The order is posted to the staff group only after payment and the delivery details. Buttons: Accept, "BTS ga yuborildi", Delivered, Cancel. In the admin panel, tab **Dostavka viloyat**, open an order, type the BTS tracking number and press **Sent via BTS** (or **Save**); the customer gets a message with the number and sees it in My orders.
+4. An order that is not paid within 30 minutes is cancelled and its stock is given back.
+5. The payment in this demo is simulated (`api/pay.js`: any signed-in customer can mark their own order as paid). For a real client, connect Click / Payme and set the order to paid only from their server callback; set `DEMO_PAYMENTS` to `off` in Vercel to switch the demo payment off. A paid order that you cancel has to be refunded by hand.

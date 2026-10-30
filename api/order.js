@@ -1,7 +1,7 @@
 'use strict';
 /* Creates an order: checks the Telegram signature, requires a verified phone, prices the cart on the server,
    saves it, posts it to the staff group (with status buttons and a map pin) and confirms to the customer. */
-const { env, tg, db, getShop, clearShop, verifyInitData, getCustomer, insertOrder, patchOrder } = require('../lib/common');
+const { env, tg, db, expireUnpaid, getShop, clearShop, verifyInitData, getCustomer, insertOrder, patchOrder } = require('../lib/common');
 const { priceOrder, inZone, toCatalog, paletteFrom, CATALOG } = require('../lib/catalog');
 const { orderText, keyboard, orderNo, money } = require('../lib/render');
 
@@ -14,10 +14,11 @@ module.exports = async (req, res) => {
   if (!user) return res.status(401).json({ error: 'bad_init_data' });
 
   try {
+    await expireUnpaid();
     const customer = await getCustomer(user.id);
     if (!customer) return res.status(403).json({ error: 'not_verified' });
 
-    const type = b.type === 'pickup' ? 'pickup' : 'courier';
+    const type = b.type === 'pickup' ? 'pickup' : b.type === 'viloyat' ? 'viloyat' : 'courier';
     const shop = await getShop();
     const palette = paletteFrom(await db('shop_colors?select=hex,name').catch(() => null));
     const cat = shop ? toCatalog(shop, palette) : CATALOG;
@@ -34,7 +35,7 @@ module.exports = async (req, res) => {
     } catch (e) {
       return res.status(400).json({ error: e.code === 'out_of_stock' ? 'out_of_stock' : 'bad_items' });
     }
-    const pay = ['cash', 'card', 'online'].includes(b.pay) ? b.pay : 'cash';
+    const pay = type === 'viloyat' ? 'prepaid' : ['cash', 'card', 'online'].includes(b.pay) ? b.pay : 'cash';
 
     let lat = null, lon = null, address = null;
     if (type === 'courier') {
@@ -81,7 +82,7 @@ module.exports = async (req, res) => {
       subtotal: priced.subtotal,
       delivery_fee: priced.fee,
       total: priced.total,
-      status: 'new',
+      status: type === 'viloyat' ? 'awaiting_payment' : 'new',
       lang,
     });
     } catch (e) { await release(); throw e; }
@@ -90,6 +91,10 @@ module.exports = async (req, res) => {
       if (promo) { const u = (await db(`promos?code=eq.${promo}&select=used`))[0]; await db(`promos?code=eq.${promo}`, { method: 'PATCH', body: { used: ((u && u.used) || 0) + 1 } }); }
       clearShop();
     } catch (e) { console.error('promo', e.message); }
+
+    if (type === 'viloyat') { // posted to the staff group only after payment and the delivery details
+      return res.status(200).json({ ok: true, pending: true, id: order.id, no: orderNo(order.id), total: order.total });
+    }
 
     if (env('STAFF_CHAT_ID')) {
       const m = await tg('sendMessage', {

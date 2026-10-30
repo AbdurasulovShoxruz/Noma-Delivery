@@ -1,12 +1,12 @@
 'use strict';
 /* Admin panel API. Login with ADMIN_PASSWORD (set in Vercel); returns a signed 12-hour token. */
 const crypto = require('crypto');
-const { env, tg, db, getOrder, patchOrder, clearShop, restoreStock } = require('../lib/common');
+const { env, tg, db, getOrder, patchOrder, clearShop, expireUnpaid, restoreStock } = require('../lib/common');
 const { CATALOG, ARTS, MATS, CATS, SUBS, CL, SH, paletteFrom, sectionsFrom, parseSizes } = require('../lib/catalog');
 const HEX = /^#[0-9A-Fa-f]{6}$/;
 const sectionRows = () => db('shop_sections?select=*&order=pos,key').catch(() => null);
 const colorRows = () => db('shop_colors?select=*&order=pos,hex').catch(() => null);
-const { orderText, keyboard, nextStatuses, orderNo, CUSTOMER_NOTE } = require('../lib/render');
+const { orderText, keyboard, nextStatuses, orderNo, customerNote } = require('../lib/render');
 
 const key = () => crypto.createHash('sha256').update(`${env('ADMIN_PASSWORD')}|${env('WEBHOOK_SECRET')}`).digest();
 const sign = (p) => crypto.createHmac('sha256', key()).update(p).digest('hex');
@@ -30,7 +30,19 @@ module.exports = async (req, res) => {
     }
     if (!okToken(req.headers['x-admin-token'])) return res.status(401).json({ error: 'unauthorized' });
 
+    if (b.action === 'track') {
+      const order = await getOrder(Number(b.id));
+      const track = String(b.track || '').replace(/[^\w\- ]/g, '').trim().slice(0, 40);
+      if (!order || order.type !== 'viloyat' || !track) return res.status(400).json({ error: 'bad_track' });
+      const u = await patchOrder(order.id, { bts_track: track });
+      if (env('STAFF_CHAT_ID') && u.group_message_id) {
+        await tg('editMessageText', { chat_id: env('STAFF_CHAT_ID'), message_id: u.group_message_id, text: orderText(u), parse_mode: 'HTML', disable_web_page_preview: true, reply_markup: keyboard(u) });
+      }
+      if (u.status === 'on_way') await tg('sendMessage', { chat_id: u.telegram_id, text: customerNote(u, 'on_way') });
+      return res.status(200).json({ ok: true });
+    }
     if (b.action === 'list') {
+      await expireUnpaid();
       const [orders, customers, products, promos, crows, srows] = await Promise.all([
         db('orders?select=*&order=created_at.desc&limit=500'),
         db('customers?select=telegram_id,phone,first_name,username,verified_at&order=verified_at.desc&limit=500'),
@@ -48,7 +60,8 @@ module.exports = async (req, res) => {
       const order = await getOrder(Number(b.id));
       if (!order) return res.status(404).json({ error: 'not_found' });
       if (!nextStatuses(order).includes(b.status)) return res.status(409).json({ error: 'bad_transition' });
-      const u = await patchOrder(order.id, { status: b.status, handled_by: 'Admin panel' }, order.status);
+      const track = order.type === 'viloyat' && b.status === 'on_way' ? String(b.track || order.bts_track || '').replace(/[^\w\- ]/g, '').trim().slice(0, 40) : '';
+      const u = await patchOrder(order.id, { status: b.status, handled_by: 'Admin panel', ...(track ? { bts_track: track } : {}) }, order.status);
       if (!u) return res.status(409).json({ error: 'changed' });
       if (b.status === 'cancelled') await restoreStock(u);
       if (env('STAFF_CHAT_ID') && u.group_message_id) {
@@ -57,7 +70,7 @@ module.exports = async (req, res) => {
           parse_mode: 'HTML', disable_web_page_preview: true, reply_markup: keyboard(u),
         });
       }
-      await tg('sendMessage', { chat_id: u.telegram_id, text: CUSTOMER_NOTE[b.status][u.lang === 'ru' ? 'ru' : 'uz'](orderNo(u.id)) });
+      await tg('sendMessage', { chat_id: u.telegram_id, text: customerNote(u, b.status) });
       return res.status(200).json({ ok: true, order: u });
     }
     if (b.action === 'product_save') {

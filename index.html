@@ -121,7 +121,7 @@ input,select{font:inherit;color:inherit}
 .inp.err{border-bottom-color:#B3261E}
 .phone{display:flex;align-items:center;gap:8px}
 .phone b{font-weight:400;font-size:16px}
-.choice{display:flex;gap:10px}
+.choice{display:flex;gap:10px;flex-wrap:wrap}.choice button[data-v=viloyat]{flex-basis:100%}select.inp{width:100%}
 .choice button{flex:1;border:1px solid var(--line);border-radius:var(--r);padding:14px 12px;text-align:left;background:var(--card)}
 .choice button.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 .choice small{display:block;color:var(--mute);font-size:12px;margin-top:2px}
@@ -280,6 +280,8 @@ Object.assign(I.en,{onlyLeft:'Left:',sneakers:'Sneakers',boots:'Boots',search:'S
  dresses:'Dresses',tops:'Tops',knitwear:'Knitwear',bottoms:'Bottoms',outerwear:'Outerwear',bags:'Bags',scarves:'Scarves',hats:'Hats'});
 const matText=p=>(p.matText&&(p.matText[S.lang]||p.matText.uz))||I[S.lang].skuMaterial[p.mat]||p.mat;
 const sOut=(p,s)=>!!p.sizeStock&&!(p.sizeStock[s]>0);
+Object.assign(I.uz,{viloyat:'Viloyatga',viloyatSub:'BTS Express',vilPrepaid:'100% oldindan to\u2018lov',vilBts:'Viloyatlarga yetkazish faqat BTS Express xizmati orqali amalga oshiriladi.',payNow:'To\u2018lov qilish',payTitle:'Onlayn to\u2018lov',payWith:'To\u2018lov usuli',payDemo:'Demo: haqiqiy loyihada Click / Payme to\u2018lov sahifasi ochiladi.',payBtn:'To\u2018lash',vTitle:'Yetkazish ma\u2019lumotlari',vPaid:'To\u2018lov qabul qilindi',region:'Viloyat',pickRegion:'Viloyatni tanlang',vAddress:'Manzil yoki BTS filiali',vSubmit:'Buyurtmani tasdiqlash',btsDone:'BTS Express orqali yuboriladi. Kuzatuv raqamini shu yerga yuboramiz.',vFill:'Ma\u2019lumotlarni to\u2018ldirish',vExpired:'To\u2018lov vaqti tugadi, buyurtma bekor qilindi',payOff:'Onlayn to\u2018lov ulanmagan',st_paid:'To\u2018landi',st_awaiting_payment:'To\u2018lov kutilmoqda'});
+Object.assign(I.ru,{viloyat:'В регионы',viloyatSub:'BTS Express',vilPrepaid:'100% предоплата',vilBts:'Доставка в регионы осуществляется только службой BTS Express.',payNow:'Оплатить',payTitle:'Онлайн-оплата',payWith:'Способ оплаты',payDemo:'Демо: в реальном проекте откроется страница оплаты Click / Payme.',payBtn:'Оплатить',vTitle:'Данные для доставки',vPaid:'Оплата получена',region:'Область',pickRegion:'Выберите область',vAddress:'Адрес или филиал BTS',vSubmit:'Подтвердить заказ',btsDone:'Отправим через BTS Express. Номер отслеживания пришлём сюда.',vFill:'Заполнить данные',vExpired:'Время оплаты истекло, заказ отменён',payOff:'Онлайн-оплата не подключена',st_paid:'Оплачен',st_awaiting_payment:'Ожидает оплаты'});
 const SUBOF={dress:'dresses',tee:'tops',shirt:'tops',hoodie:'knitwear',knit:'knitwear',trousers:'bottoms',shorts:'bottoms',skirt:'bottoms',coat:'outerwear',tote:'bags',scarf:'scarves',cap:'hats',sneaker:'sneakers',boot:'boots'};
 /* Categories and sections set in the admin panel (null = built-in lists) */
 let SECS=null;
@@ -347,7 +349,9 @@ const P = [
  {id:15,cat:'shoes',art:'sneaker',price:359000,mat:'canvas',sizes:SH,colors:['#FFFFFF', '#181818', '#B8A88F'],
   name:{en:'Canvas Sneakers',ru:'Холщовые кеды',uz:'Kanvas krossovkalar'}}
 ];
-const DELIVERY_FEE = 25000, FREE_OVER = 500000;
+const DELIVERY_FEE = 25000, FREE_OVER = 500000, VILOYAT_FEE = 35000;
+const REGIONS = ["Qoraqalpog‘iston Respublikasi", "Andijon viloyati", "Buxoro viloyati", "Farg‘ona viloyati", "Jizzax viloyati", "Xorazm viloyati", "Namangan viloyati", "Navoiy viloyati", "Qashqadaryo viloyati", "Samarqand viloyati", "Sirdaryo viloyati", "Surxondaryo viloyati", "Toshkent viloyati"];
+const qa = x => String(x==null?'':x).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 
 /* silhouettes: viewBox 0 0 100 125 */
 const SHAPES = {
@@ -403,7 +407,7 @@ const S = {
   co:{name:(tgUser&&[tgUser.first_name,tgUser.last_name].filter(Boolean).join(' '))||'',phone:'',type:'courier',district:'',address:'',pay:'cash',lat:null,lon:null,pin:false},
   favs:(()=>{ try{ return JSON.parse(localStorage.getItem('noma_favs')||'[]'); }catch(e){ return []; } })(),
   theme:(()=>{ try{ const s=localStorage.getItem('noma_theme'); if(s==='dark'||s==='light') return s; }catch(e){} return (tg&&tg.colorScheme)||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'); })(),
-  promo:null, q:'', sort:'def', sub:'all', myOrders:null, err:{}, order:null, live:false, verified:false, phone:'', bot:'', demoNote:false, busy:false, addrAuto:true, verifyMsg:'', map:null
+  promo:null, vm:0, vo:null, vf:{region:'',tuman:'',name:'',phone:'',address:''}, q:'', sort:'def', sub:'all', myOrders:null, err:{}, order:null, live:false, verified:false, phone:'', bot:'', demoNote:false, busy:false, addrAuto:true, verifyMsg:'', map:null
 };
 const t = k => (I[S.lang][k] ?? I.uz[k] ?? k);
 const $ = s => document.querySelector(s);
@@ -413,7 +417,7 @@ const save = () => { try{ localStorage.setItem('noma_bag',JSON.stringify(S.bag))
 const count = () => S.bag.reduce((a,b)=>a+b.qty,0);
 const subtotal = () => S.bag.reduce((a,b)=>a+pById(b.id).price*b.qty,0);
 const disc = () => S.promo ? Math.round(subtotal()*S.promo.percent/100) : 0;
-const shipFee = () => S.co.type==='pickup' || subtotal()>=FREE_OVER || !S.bag.length ? 0 : DELIVERY_FEE;
+const shipFee = () => !S.bag.length ? 0 : S.co.type==='pickup' ? 0 : S.co.type==='viloyat' ? VILOYAT_FEE : subtotal()>=FREE_OVER ? 0 : DELIVERY_FEE;
 const view = () => S.nav[S.nav.length-1];
 function applyTheme(){
   document.documentElement.dataset.theme=S.theme; const c=S.theme==='dark'?'#121212':'#F7F5F0';
@@ -540,7 +544,9 @@ function ordersView(){
   const head=`<div class="backrow"><button class="link" data-a="back">\u2190 ${t('back')}</button></div><h2 style="font-family:var(--serif);font-weight:500;font-size:34px;margin:0">${t('myOrders')}</h2>`;
   if(!L.length) return head+`<div class="empty"><p class="muted">${t('noOrders')}</p><button class="pill" data-a="home">${t('continue')}</button></div>`;
   return head+L.map(o=>`<div class="irow" style="flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between"><b style="font-weight:500">${o.no}</b><span>${t('st_'+o.status)}</span></div>
-   <div class="muted small">${new Date(o.at).toLocaleDateString(S.lang==='ru'?'ru-RU':'en-GB')} \u00B7 ${fmt(o.total)}</div><div style="color:var(--ink);font-size:13px">${o.items.map(l=>`${l.qty} \u00D7 ${l.name}${l.size?' ('+l.size+')':''}`).join(', ')}</div></div>`).join('');
+   <div class="muted small">${new Date(o.at).toLocaleDateString(S.lang==='ru'?'ru-RU':'en-GB')} \u00B7 ${fmt(o.total)}</div><div style="color:var(--ink);font-size:13px">${o.items.map(l=>`${l.qty} \u00D7 ${l.name}${l.size?' ('+l.size+')':''}`).join(', ')}</div>
+   ${o.track?`<div class="muted small">BTS Express \u00B7 ${o.track}</div>`:''}
+   ${o.type==='viloyat'&&(o.status==='awaiting_payment'||o.status==='paid')?`<div><button class="pill sm" data-a="vresume" data-v="${o.id}" style="margin-top:6px">${o.status==='paid'?t('vFill'):t('payNow')}</button></div>`:''}</div>`).join('');
 }
 function pdp(){
   const p = pById(S.pid); const c = p.colors[S.sel.color];
@@ -593,20 +599,65 @@ function checkout(){
     ${phoneBlock}</div>
   <div class="panel"><div class="label" style="margin-top:0">${t('deliveryType')}</div>
     <div class="choice"><button class="${c.type==='courier'?'on':''}" data-a="type" data-v="courier">${t('courier')}<small>${t('courierSub')}</small></button>
-    <button class="${c.type==='pickup'?'on':''}" data-a="type" data-v="pickup">${t('pickup')}<small>${t('pickupSub')}</small></button></div>
+    <button class="${c.type==='pickup'?'on':''}" data-a="type" data-v="pickup">${t('pickup')}<small>${t('pickupSub')}</small></button>
+    <button class="${c.type==='viloyat'?'on':''}" data-a="type" data-v="viloyat">${t('viloyat')} \u00B7 BTS Express<small>${t('vilPrepaid')}</small></button></div>
     ${courier}</div>
-  <div class="panel"><div class="label" style="margin-top:0">${t('payment')}</div><div class="pay">
+  ${c.type==='viloyat'?`<div class="panel"><div class="label" style="margin-top:0">${t('payment')}</div><p style="margin:0">${t('vilPrepaid')} (Click / Payme)</p><p class="muted" style="font-size:13px;margin:8px 0 0">${t('vilBts')}</p></div>`:`<div class="panel"><div class="label" style="margin-top:0">${t('payment')}</div><div class="pay">
     ${[['cash',t('cash')],['card',t('card')],['online',t('online')]].map(([k,l])=>`<button class="${c.pay===k?'on':''}" data-a="pay" data-v="${k}"><span>${l}${k==='online'?`<span class="tag">${t('demo')}</span>`:''}</span><span class="dot"></span></button>`).join('')}</div>
-    ${c.pay==='online'?`<p class="muted" style="font-size:12px;margin:10px 0 0">${t('payNote')}</p>`:''}</div>
+    ${c.pay==='online'?`<p class="muted" style="font-size:12px;margin:10px 0 0">${t('payNote')}</p>`:''}</div>`}
   <div class="sum"><div><span class="muted">${t('subtotal')}</span><span>${fmt(sub)}</span></div>
   <div><span class="muted">${t('delivery')}</span><span>${!fee?t('free'):fmt(fee)}</span></div>
   ${disc()?`<div><span class="muted">${S.promo.code} \u2212${S.promo.percent}%</span><span>\u2212${fmt(disc())}</span></div>`:''}<div class="tot"><span>${t('total')}</span><span>${fmt(sub-disc()+fee)}</span></div></div>
-  <div class="dock"><button class="pill full" data-a="place" ${S.busy?'disabled':''}>${S.busy?t('sending'):`${t('placeOrder')} · ${fmt(sub-disc()+fee)}`}</button></div>`;
+  <div class="dock"><button class="pill full" data-a="place" ${S.busy?'disabled':''}>${S.busy?t('sending'):`${c.type==='viloyat'?t('payNow'):t('placeOrder')} · ${fmt(sub-disc()+fee)}`}</button></div>`;
+}
+function payView(){
+  const o=S.vo;
+  return `<h2 style="font-family:var(--serif);font-weight:500;font-size:34px;margin:0">${t('payTitle')}</h2>
+  <div class="panel"><div class="irow"><span>${t('orderNo')}</span><b style="color:var(--ink);font-weight:500">${o.no}</b></div><div class="irow"><span>${t('delivery')}</span><span style="color:var(--ink)">BTS Express</span></div><div class="irow"><span>${t('total')}</span><b style="color:var(--ink);font-weight:500">${fmt(o.total)}</b></div></div>
+  <div class="panel"><div class="label" style="margin-top:0">${t('payWith')}</div><div class="pay">${['Click','Payme','Uzcard / Humo'].map((m,i)=>`<button class="${S.vm===i?'on':''}" data-a="vmethod" data-v="${i}"><span>${m}</span><span class="dot"></span></button>`).join('')}</div>
+  <p class="muted" style="font-size:12px;margin:10px 0 0">${t('payDemo')}</p></div>
+  <div class="dock"><button class="pill full" data-a="dopay" ${S.busy?'disabled':''}>${S.busy?t('sending'):`${t('payBtn')} \u00B7 ${fmt(o.total)}`}</button></div>`;
+}
+function vform(){
+  const f=S.vf, e=S.err, er=k=>e[k]?`<div class="errtxt">${t('req')}</div>`:'';
+  return `<h2 style="font-family:var(--serif);font-weight:500;font-size:34px;margin:0">${t('vTitle')}</h2>
+  <p class="muted" style="margin:6px 0 0">\u2713 ${t('vPaid')} \u00B7 BTS Express</p>
+  <div class="panel">
+  <label class="field"><span>${t('region')}</span><select class="inp ${e.region?'err':''}" id="v-region"><option value="">${t('pickRegion')}</option>${REGIONS.map(r=>`<option ${f.region===r?'selected':''}>${r}</option>`).join('')}</select>${er('region')}</label>
+  <label class="field"><span>${t('district')}</span><input class="inp ${e.tuman?'err':''}" id="v-tuman" value="${qa(f.tuman)}">${er('tuman')}</label>
+  <label class="field"><span>${t('name')}</span><input class="inp ${e.name?'err':''}" id="v-name" value="${qa(f.name)}" autocomplete="name">${er('name')}</label>
+  <label class="field"><span>${t('phone')}</span><div class="phone"><b>+998</b><input class="inp ${e.phone?'err':''}" id="v-phone" inputmode="numeric" placeholder="90 123 45 67" value="${fmtPhone(f.phone)}"></div>${er('phone')}</label>
+  <label class="field"><span>${t('vAddress')}</span><input class="inp ${e.address?'err':''}" id="v-address" value="${qa(f.address)}">${er('address')}</label></div>
+  <div class="dock"><button class="pill full" data-a="vsubmit" ${S.busy?'disabled':''}>${S.busy?t('sending'):t('vSubmit')}</button></div>`;
+}
+function bindVform(){
+  const g=id=>document.getElementById(id), f=S.vf;
+  g('v-region').onchange=ev=>{f.region=ev.target.value;S.err.region=0};
+  g('v-tuman').oninput=ev=>{f.tuman=ev.target.value;S.err.tuman=0};
+  g('v-name').oninput=ev=>{f.name=ev.target.value;S.err.name=0};
+  g('v-phone').oninput=ev=>{f.phone=ev.target.value.replace(/\D/g,'').slice(0,9);ev.target.value=fmtPhone(f.phone);S.err.phone=0};
+  g('v-address').oninput=ev=>{f.address=ev.target.value;S.err.address=0};
+}
+function toVillage(){ S.vf.name=S.vf.name||S.co.name; S.vf.phone=S.vf.phone||(S.phone?String(S.phone).slice(-9):S.co.phone); }
+function orderFail(err){
+  S.busy=false; const code=err&&err.json&&err.json.error;
+  if(code==='not_verified'){ S.verified=false; S.nav=['verify']; render(); return; }
+  if(code==='bad_promo') S.promo=null;
+  render(); toast(code==='outside_zone'?t('outsideZone'):code==='out_of_stock'?t('outOfStock'):code==='bad_promo'?t('badPromo'):code==='expired'?t('vExpired'):code==='payments_not_connected'?t('payOff'):t('errGeneric'));
+}
+async function placeVil(){
+  const c=S.co; S.busy=true; render();
+  const after=r=>{ S.vo=r; S.bag=[]; S.promo=null; save(); S.busy=false; S.nav=['home','pay']; render(); window.scrollTo(0,0); haptic('medium'); };
+  if(!S.live){ after({id:null,no:'NM-'+(1000+Math.floor(Math.random()*9000)),total:subtotal()-disc()+VILOYAT_FEE,items:S.bag.slice()}); return; }
+  try{
+    const r=await api('/api/order',{initData:tg.initData,items:S.bag.map(l=>({id:l.id,size:l.size,color:l.color,qty:l.qty})),type:'viloyat',promo:S.promo?S.promo.code:undefined,name:c.name.trim(),lang:S.lang});
+    after({id:r.id,no:r.no,total:r.total});
+  }catch(err){ orderFail(err); }
 }
 function done(){
   const o=S.order;
   const head=`<div class="done"><div class="tick"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7.5"/></svg></div>
-  <h2>${t('orderPlaced')}</h2><p class="muted">${t('orderNo')} ${o.no}<br>${o.live?t('sentToStore'):t('thanks')}</p>`;
+  <h2>${t('orderPlaced')}</h2><p class="muted">${t('orderNo')} ${o.no}<br>${o.live?t('sentToStore'):t('thanks')}${o.viloyat?`<br>${t('btsDone')}`:''}</p>`;
   let owner='';
   if(!o.live){
     const lines=o.items.map(l=>`${l.qty} × ${pById(l.id).name[S.lang]} (${l.size||t('oneSize')})`).join('\n');
@@ -652,13 +703,14 @@ function render(){
   const v=curView();
   { const ob=document.getElementById('ordbtn'); if(ob) ob.hidden=!S.live||v==='verify'||v==='checkout'||v==='done'; }
   if(S.map){ try{ S.map.remove(); }catch(e){} S.map=null; }
-  const body = v==='verify'?verifyView(): v==='home'?home(): v==='pdp'?pdp(): v==='bag'?bagView(): v==='favs'?favsView(): v==='sizes'?sizesView(): v==='orders'?ordersView(): v==='store'?storeView(): v==='checkout'?checkout(): done();
+  const body = v==='verify'?verifyView(): v==='home'?home(): v==='pdp'?pdp(): v==='bag'?bagView(): v==='favs'?favsView(): v==='pay'?payView(): v==='vform'?vform(): v==='sizes'?sizesView(): v==='orders'?ordersView(): v==='store'?storeView(): v==='checkout'?checkout(): done();
   $('#app').innerHTML = (S.demoNote?`<div class="banner">${t('demoBanner')}</div>`:'') + body;
   if(tg){
     try{ if(S.nav.length>1 && v!=='done' && v!=='verify') tg.BackButton.show(); else tg.BackButton.hide(); }catch(e){}
     try{ if(v==='checkout' && S.co.type==='courier') tg.disableVerticalSwipes(); else tg.enableVerticalSwipes(); }catch(e){}
   }
   if(v==='store') initStoreMap();
+  if(v==='vform') bindVform();
   if(v==='checkout'){ bindForm(); if(S.co.type==='courier') initMap(); }
 }
 function bindForm(){
@@ -685,6 +737,7 @@ async function place(){
     if(el) el.scrollIntoView({block:'center',behavior:'smooth'});
     return;
   }
+  if(c.type==='viloyat') return placeVil();
   if(S.live){
     S.busy=true; render();
     try{
@@ -857,6 +910,22 @@ document.addEventListener('click',ev=>{
     case 'del': S.bag.splice(+v,1); save(); render(); break;
     case 'tocheckout': S.err={}; go('checkout'); break;
     case 'type': S.co.type=v; render(); break;
+    case 'vmethod': S.vm=+v; render(); break;
+    case 'dopay': {
+      if(S.busy||!S.vo) break; S.busy=true; render();
+      const next=()=>{ S.busy=false; toVillage(); S.nav=['home','vform']; render(); haptic('medium'); window.scrollTo(0,0); };
+      if(!S.live||!S.vo.id){ setTimeout(next,700); break; }
+      api('/api/pay',{initData:tg.initData,id:S.vo.id}).then(next).catch(orderFail); break; }
+    case 'vsubmit': {
+      const f=S.vf, e={};
+      if(!f.region) e.region=1; if(f.tuman.trim().length<2) e.tuman=1; if(f.name.trim().length<2) e.name=1;
+      if(f.phone.replace(/\D/g,'').length!==9) e.phone=1; if(f.address.trim().length<3) e.address=1;
+      S.err=e; if(Object.keys(e).length){ render(); haptic('heavy'); const el=document.querySelector('.err'); if(el) el.scrollIntoView({block:'center',behavior:'smooth'}); break; }
+      if(S.busy||!S.vo) break; S.busy=true; render();
+      const fin=no=>{ S.order={live:S.live,viloyat:true,no,total:S.vo.total,name:f.name.trim(),phone:f.phone,type:'viloyat',address:`${f.region}, ${f.tuman}, ${f.address}`,items:S.vo.items||[]}; S.busy=false; S.vo=null; S.vf={region:'',tuman:'',name:'',phone:'',address:''}; S.nav=['home','done']; render(); window.scrollTo(0,0); try{ tg.HapticFeedback.notificationOccurred('success'); }catch(x){} };
+      if(!S.live||!S.vo.id){ setTimeout(()=>fin(S.vo.no),500); break; }
+      api('/api/viloyat',{initData:tg.initData,id:S.vo.id,region:f.region,tuman:f.tuman,name:f.name,phone:f.phone,address:f.address}).then(r=>fin(r.no)).catch(orderFail); break; }
+    case 'vresume': { const o=(S.myOrders||[]).find(x=>x.id===+v); if(!o) break; S.vo={id:o.id,no:o.no,total:o.total}; toVillage(); S.nav=['home',o.status==='paid'?'vform':'pay']; render(); window.scrollTo(0,0); break; }
     case 'pay': S.co.pay=v; render(); break;
     case 'share': shareNumber(); break;
     case 'recheck': pollVerified(); break;
@@ -877,11 +946,11 @@ document.addEventListener('scroll',ev=>{
   const i=Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth));
   tr.parentElement.querySelectorAll('.gdots i').forEach((d,k)=>d.classList.toggle('on',k===i));
 },true);
-$('#bagbtn').addEventListener('click',()=>{ const v=curView(); if(v!=='verify'&&v!=='bag'&&v!=='checkout'&&v!=='done'){ closeSheet(); go('bag'); } });
+$('#bagbtn').addEventListener('click',()=>{ const v=curView(); if(v!=='verify'&&v!=='bag'&&v!=='checkout'&&v!=='done'&&v!=='pay'&&v!=='vform'){ closeSheet(); go('bag'); } });
 document.addEventListener('input',ev=>{ if(ev.target.id==='f-q'){ S.q=ev.target.value; const g=$('#grid'); if(g) g.innerHTML=gridHtml(); } });
 document.addEventListener('change',ev=>{ if(ev.target.id==='f-sort'){ S.sort=ev.target.value; const g=$('#grid'); if(g) g.innerHTML=gridHtml(); } });
 $('#themebtn').addEventListener('click',()=>{ S.theme=S.theme==='dark'?'light':'dark'; try{localStorage.setItem('noma_theme',S.theme);}catch(e){} applyTheme(); haptic(); });
-$('#favbtn').addEventListener('click',()=>{ const v=curView(); if(v!=='verify'&&v!=='favs'&&v!=='checkout'&&v!=='done'){ closeSheet(); go('favs'); } });
+$('#favbtn').addEventListener('click',()=>{ const v=curView(); if(v!=='verify'&&v!=='favs'&&v!=='checkout'&&v!=='done'&&v!=='pay'&&v!=='vform'){ closeSheet(); go('favs'); } });
 $('#logo').addEventListener('click',()=>{ S.nav=['home']; closeSheet(); render(); window.scrollTo(0,0); });
 if(tg){ try{ tg.BackButton.onClick(back); }catch(e){} }
 applyTheme();
