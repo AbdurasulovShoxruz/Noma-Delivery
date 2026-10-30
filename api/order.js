@@ -1,8 +1,8 @@
 'use strict';
 /* Creates an order: checks the Telegram signature, requires a verified phone, prices the cart on the server,
    saves it, posts it to the staff group (with status buttons and a map pin) and confirms to the customer. */
-const { env, tg, db, expireUnpaid, getShop, clearShop, verifyInitData, getCustomer, insertOrder, patchOrder } = require('../lib/common');
-const { priceOrder, inZone, toCatalog, paletteFrom, CATALOG } = require('../lib/catalog');
+const { env, tg, db, expireUnpaid, normalizePhone, getShop, clearShop, verifyInitData, getCustomer, insertOrder, patchOrder } = require('../lib/common');
+const { priceOrder, inZone, toCatalog, paletteFrom, CATALOG, REGIONS } = require('../lib/catalog');
 const { orderText, keyboard, orderNo, money } = require('../lib/render');
 
 const clean = (s, n) => String(s == null ? '' : s).replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, n);
@@ -37,7 +37,7 @@ module.exports = async (req, res) => {
     }
     const pay = type === 'viloyat' ? 'prepaid' : ['cash', 'card', 'online'].includes(b.pay) ? b.pay : 'cash';
 
-    let lat = null, lon = null, address = null;
+    let lat = null, lon = null, address = null, region = null, district = null, rphone = null;
     if (type === 'courier') {
       lat = Number(b.lat);
       lon = Number(b.lon);
@@ -45,6 +45,13 @@ module.exports = async (req, res) => {
       if (!inZone(lat, lon)) return res.status(400).json({ error: 'outside_zone' });
       address = clean(b.address, 200);
       if (!address) return res.status(400).json({ error: 'bad_address' });
+    }
+    if (type === 'viloyat') { // delivery details are asked before the payment; the order reaches staff after it
+      region = REGIONS.includes(b.region) ? b.region : null;
+      district = clean(b.tuman, 60);
+      address = clean(b.address, 200);
+      rphone = normalizePhone('998' + String(b.phone || '').replace(/\D/g, '').slice(-9));
+      if (!region || district.length < 2 || address.length < 3 || !rphone) return res.status(400).json({ error: 'bad_details' });
     }
     const name = clean(b.name, 60) || customer.first_name || '—';
     const lang = b.lang === 'ru' ? 'ru' : 'uz';
@@ -76,6 +83,7 @@ module.exports = async (req, res) => {
       name,
       phone: customer.phone, // always the verified number, never one sent by the browser
       type, address, lat, lon, pay,
+      ...(type === 'viloyat' ? { region, district, recipient_phone: rphone } : {}),
       items: priced.lines,
       promo,
       discount: priced.discount,

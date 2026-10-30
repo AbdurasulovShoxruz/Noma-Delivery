@@ -280,8 +280,8 @@ Object.assign(I.en,{onlyLeft:'Left:',sneakers:'Sneakers',boots:'Boots',search:'S
  dresses:'Dresses',tops:'Tops',knitwear:'Knitwear',bottoms:'Bottoms',outerwear:'Outerwear',bags:'Bags',scarves:'Scarves',hats:'Hats'});
 const matText=p=>(p.matText&&(p.matText[S.lang]||p.matText.uz))||I[S.lang].skuMaterial[p.mat]||p.mat;
 const sOut=(p,s)=>!!p.sizeStock&&!(p.sizeStock[s]>0);
-Object.assign(I.uz,{viloyat:'Viloyatga',viloyatSub:'BTS Express',vilPrepaid:'100% oldindan to\u2018lov',vilBts:'Viloyatlarga yetkazish faqat BTS Express xizmati orqali amalga oshiriladi.',payNow:'To\u2018lov qilish',payTitle:'Onlayn to\u2018lov',payWith:'To\u2018lov usuli',payDemo:'Demo: haqiqiy loyihada Click / Payme to\u2018lov sahifasi ochiladi.',payBtn:'To\u2018lash',vTitle:'Yetkazish ma\u2019lumotlari',vPaid:'To\u2018lov qabul qilindi',region:'Viloyat',pickRegion:'Viloyatni tanlang',vAddress:'Manzil yoki BTS filiali',vSubmit:'Buyurtmani tasdiqlash',btsDone:'BTS Express orqali yuboriladi. Kuzatuv raqamini shu yerga yuboramiz.',vFill:'Ma\u2019lumotlarni to\u2018ldirish',vExpired:'To\u2018lov vaqti tugadi, buyurtma bekor qilindi',payOff:'Onlayn to\u2018lov ulanmagan',st_paid:'To\u2018landi',st_awaiting_payment:'To\u2018lov kutilmoqda'});
-Object.assign(I.ru,{viloyat:'В регионы',viloyatSub:'BTS Express',vilPrepaid:'100% предоплата',vilBts:'Доставка в регионы осуществляется только службой BTS Express.',payNow:'Оплатить',payTitle:'Онлайн-оплата',payWith:'Способ оплаты',payDemo:'Демо: в реальном проекте откроется страница оплаты Click / Payme.',payBtn:'Оплатить',vTitle:'Данные для доставки',vPaid:'Оплата получена',region:'Область',pickRegion:'Выберите область',vAddress:'Адрес или филиал BTS',vSubmit:'Подтвердить заказ',btsDone:'Отправим через BTS Express. Номер отслеживания пришлём сюда.',vFill:'Заполнить данные',vExpired:'Время оплаты истекло, заказ отменён',payOff:'Онлайн-оплата не подключена',st_paid:'Оплачен',st_awaiting_payment:'Ожидает оплаты'});
+Object.assign(I.uz,{vPhoneNote:'Telegramdagi tasdiqlangan raqamingiz. Xohlasangiz o\u2018zgartiring.',viloyat:'Viloyatga',viloyatSub:'BTS Express',vilPrepaid:'100% oldindan to\u2018lov',vilBts:'Viloyatlarga yetkazish faqat BTS Express xizmati orqali amalga oshiriladi. Avval to\u2018lov qilinadi, keyin buyurtma qabul qilinadi.',payNow:'To\u2018lov qilish',payTitle:'Onlayn to\u2018lov',payWith:'To\u2018lov usuli',payDemo:'Demo: haqiqiy loyihada Click / Payme to\u2018lov sahifasi ochiladi.',payBtn:'To\u2018lash',vTitle:'Yetkazish ma\u2019lumotlari',vPaid:'To\u2018lov qabul qilindi',region:'Viloyat',pickRegion:'Viloyatni tanlang',vAddress:'Manzil yoki BTS filiali',vSubmit:'Buyurtmani tasdiqlash',btsDone:'BTS Express orqali yuboriladi. Kuzatuv raqamini shu yerga yuboramiz.',vFill:'Ma\u2019lumotlarni to\u2018ldirish',vExpired:'To\u2018lov vaqti tugadi, buyurtma bekor qilindi',payOff:'Onlayn to\u2018lov ulanmagan',st_paid:'To\u2018landi',st_awaiting_payment:'To\u2018lov kutilmoqda'});
+Object.assign(I.ru,{vPhoneNote:'Ваш подтверждённый номер в Telegram. Можно изменить.',viloyat:'В регионы',viloyatSub:'BTS Express',vilPrepaid:'100% предоплата',vilBts:'Доставка в регионы осуществляется только службой BTS Express. Сначала оплата, затем заказ принимается.',payNow:'Оплатить',payTitle:'Онлайн-оплата',payWith:'Способ оплаты',payDemo:'Демо: в реальном проекте откроется страница оплаты Click / Payme.',payBtn:'Оплатить',vTitle:'Данные для доставки',vPaid:'Оплата получена',region:'Область',pickRegion:'Выберите область',vAddress:'Адрес или филиал BTS',vSubmit:'Подтвердить заказ',btsDone:'Отправим через BTS Express. Номер отслеживания пришлём сюда.',vFill:'Заполнить данные',vExpired:'Время оплаты истекло, заказ отменён',payOff:'Онлайн-оплата не подключена',st_paid:'Оплачен',st_awaiting_payment:'Ожидает оплаты'});
 const SUBOF={dress:'dresses',tee:'tops',shirt:'tops',hoodie:'knitwear',knit:'knitwear',trousers:'bottoms',shorts:'bottoms',skirt:'bottoms',coat:'outerwear',tote:'bags',scarf:'scarves',cap:'hats',sneaker:'sneakers',boot:'boots'};
 /* Categories and sections set in the admin panel (null = built-in lists) */
 let SECS=null;
@@ -546,7 +546,7 @@ function ordersView(){
   return head+L.map(o=>`<div class="irow" style="flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between"><b style="font-weight:500">${o.no}</b><span>${t('st_'+o.status)}</span></div>
    <div class="muted small">${new Date(o.at).toLocaleDateString(S.lang==='ru'?'ru-RU':'en-GB')} \u00B7 ${fmt(o.total)}</div><div style="color:var(--ink);font-size:13px">${o.items.map(l=>`${l.qty} \u00D7 ${l.name}${l.size?' ('+l.size+')':''}`).join(', ')}</div>
    ${o.track?`<div class="muted small">BTS Express \u00B7 ${o.track}</div>`:''}
-   ${o.type==='viloyat'&&(o.status==='awaiting_payment'||o.status==='paid')?`<div><button class="pill sm" data-a="vresume" data-v="${o.id}" style="margin-top:6px">${o.status==='paid'?t('vFill'):t('payNow')}</button></div>`:''}</div>`).join('');
+   ${o.type==='viloyat'&&o.status==='awaiting_payment'?`<div><button class="pill sm" data-a="vresume" data-v="${o.id}" style="margin-top:6px">${t('payNow')}</button></div>`:''}</div>`).join('');
 }
 function pdp(){
   const p = pById(S.pid); const c = p.colors[S.sel.color];
@@ -583,7 +583,14 @@ function checkout(){
   const er = k => e[k]?`<div class="errtxt">${t('req')}</div>`:'';
   const ph = S.phone||'';
   const shown = /^998\d{9}$/.test(ph) ? '+998 '+fmtPhone(ph.slice(3)) : '+'+ph;
-  const phoneBlock = S.live
+  if(c.type==='viloyat') toVillage();
+  const vf=S.vf;
+  const vbox=`<div class="field"><span class="muted" style="font-size:13px">${t('vilBts')}</span></div>
+    <label class="field"><span>${t('region')}</span><select class="inp ${e.region?'err':''}" id="v-region"><option value="">${t('pickRegion')}</option>${REGIONS.map(r=>`<option ${vf.region===r?'selected':''}>${r}</option>`).join('')}</select>${er('region')}</label>
+    <label class="field"><span>${t('district')}</span><input class="inp ${e.tuman?'err':''}" id="v-tuman" value="${qa(vf.tuman)}">${er('tuman')}</label>
+    <label class="field"><span>${t('vAddress')}</span><input class="inp ${e.address?'err':''}" id="v-address" value="${qa(vf.address)}">${er('address')}</label>`;
+  const vphone=`<label class="field"><span>${t('phone')}</span><div class="phone"><b>+998</b><input class="inp ${e.vphone?'err':''}" id="v-phone" inputmode="numeric" placeholder="90 123 45 67" value="${fmtPhone(vf.phone)}"></div>${S.live?`<div class="muted" style="font-size:12px;margin-top:6px">\u2713 ${t('vPhoneNote')}</div>`:''}${er('vphone')}</label>`;
+  const phoneBlock = c.type==='viloyat' ? vphone : S.live
     ? `<div class="field"><span>${t('phone')}</span><div class="vphone">${shown}<span class="tag ok">✓ ${t('phoneOk')}</span></div></div>`
     : `<label class="field"><span>${t('phone')}</span><div class="phone"><b>+998</b><input class="inp ${e.phone?'err':''}" id="f-phone" inputmode="numeric" placeholder="90 123 45 67" value="${fmtPhone(c.phone)}"></div>${er('phone')}</label>`;
   const courier = c.type==='courier' ? `
@@ -591,7 +598,7 @@ function checkout(){
       <div class="map-wrap"><div id="map"></div><div class="pin"><svg viewBox="0 0 30 40"><path d="M15 39C15 39 2 23 2 14a13 13 0 0 1 26 0c0 9-13 25-13 25z" style="fill:var(--ink)"/><circle cx="15" cy="14" r="5" style="fill:var(--bg)"/></svg></div></div>
       <button class="pill ghost sm" style="margin-top:10px" data-a="locate">${t('useMyLoc')}</button>
       <div class="errtxt" id="zone" style="display:none"></div></div>
-    <label class="field"><span>${t('addressNote')}</span><input class="inp ${e.address?'err':''}" id="f-address" value="${c.address.replace(/"/g,'&quot;')}" autocomplete="street-address">${er('address')}</label>` : '';
+    <label class="field"><span>${t('addressNote')}</span><input class="inp ${e.address?'err':''}" id="f-address" value="${c.address.replace(/"/g,'&quot;')}" autocomplete="street-address">${er('address')}</label>` : c.type==='viloyat' ? vbox : '';
   return `<div class="backrow"><button class="link" data-a="back">← ${t('back')}</button></div>
   <h2 style="font-family:var(--serif);font-weight:500;font-size:34px;margin:0">${t('checkout')}</h2>
   <div class="panel"><div class="label" style="margin-top:0">${t('details')}</div>
@@ -618,27 +625,15 @@ function payView(){
   <p class="muted" style="font-size:12px;margin:10px 0 0">${t('payDemo')}</p></div>
   <div class="dock"><button class="pill full" data-a="dopay" ${S.busy?'disabled':''}>${S.busy?t('sending'):`${t('payBtn')} \u00B7 ${fmt(o.total)}`}</button></div>`;
 }
-function vform(){
-  const f=S.vf, e=S.err, er=k=>e[k]?`<div class="errtxt">${t('req')}</div>`:'';
-  return `<h2 style="font-family:var(--serif);font-weight:500;font-size:34px;margin:0">${t('vTitle')}</h2>
-  <p class="muted" style="margin:6px 0 0">\u2713 ${t('vPaid')} \u00B7 BTS Express</p>
-  <div class="panel">
-  <label class="field"><span>${t('region')}</span><select class="inp ${e.region?'err':''}" id="v-region"><option value="">${t('pickRegion')}</option>${REGIONS.map(r=>`<option ${f.region===r?'selected':''}>${r}</option>`).join('')}</select>${er('region')}</label>
-  <label class="field"><span>${t('district')}</span><input class="inp ${e.tuman?'err':''}" id="v-tuman" value="${qa(f.tuman)}">${er('tuman')}</label>
-  <label class="field"><span>${t('name')}</span><input class="inp ${e.name?'err':''}" id="v-name" value="${qa(f.name)}" autocomplete="name">${er('name')}</label>
-  <label class="field"><span>${t('phone')}</span><div class="phone"><b>+998</b><input class="inp ${e.phone?'err':''}" id="v-phone" inputmode="numeric" placeholder="90 123 45 67" value="${fmtPhone(f.phone)}"></div>${er('phone')}</label>
-  <label class="field"><span>${t('vAddress')}</span><input class="inp ${e.address?'err':''}" id="v-address" value="${qa(f.address)}">${er('address')}</label></div>
-  <div class="dock"><button class="pill full" data-a="vsubmit" ${S.busy?'disabled':''}>${S.busy?t('sending'):t('vSubmit')}</button></div>`;
-}
 function bindVform(){
   const g=id=>document.getElementById(id), f=S.vf;
-  g('v-region').onchange=ev=>{f.region=ev.target.value;S.err.region=0};
-  g('v-tuman').oninput=ev=>{f.tuman=ev.target.value;S.err.tuman=0};
-  g('v-name').oninput=ev=>{f.name=ev.target.value;S.err.name=0};
-  g('v-phone').oninput=ev=>{f.phone=ev.target.value.replace(/\D/g,'').slice(0,9);ev.target.value=fmtPhone(f.phone);S.err.phone=0};
-  g('v-address').oninput=ev=>{f.address=ev.target.value;S.err.address=0};
+  if(g('v-region')) g('v-region').onchange=ev=>{f.region=ev.target.value;S.err.region=0};
+  if(g('v-tuman')) g('v-tuman').oninput=ev=>{f.tuman=ev.target.value;S.err.tuman=0};
+  if(g('v-address')) g('v-address').oninput=ev=>{f.address=ev.target.value;S.err.address=0};
+  if(g('v-phone')) g('v-phone').oninput=ev=>{f.phone=ev.target.value.replace(/\D/g,'').slice(0,9);ev.target.value=fmtPhone(f.phone);S.err.vphone=0};
 }
-function toVillage(){ S.vf.name=S.vf.name||S.co.name; S.vf.phone=S.vf.phone||(S.phone?String(S.phone).slice(-9):S.co.phone); }
+/* the recipient phone starts as the customer's confirmed Telegram number and can be changed */
+function toVillage(){ if(!S.vf.phone) S.vf.phone=S.phone?String(S.phone).slice(-9):S.co.phone; }
 function orderFail(err){
   S.busy=false; const code=err&&err.json&&err.json.error;
   if(code==='not_verified'){ S.verified=false; S.nav=['verify']; render(); return; }
@@ -648,9 +643,9 @@ function orderFail(err){
 async function placeVil(){
   const c=S.co; S.busy=true; render();
   const after=r=>{ S.vo=r; S.bag=[]; S.promo=null; save(); S.busy=false; S.nav=['home','pay']; render(); window.scrollTo(0,0); haptic('medium'); };
-  if(!S.live){ after({id:null,no:'NM-'+(1000+Math.floor(Math.random()*9000)),total:subtotal()-disc()+VILOYAT_FEE,items:S.bag.slice()}); return; }
+  if(!S.live){ after({id:null,no:'NM-'+(1000+Math.floor(Math.random()*9000)),total:subtotal()-disc()+VILOYAT_FEE,items:S.bag.slice(),name:c.name.trim()}); return; }
   try{
-    const r=await api('/api/order',{initData:tg.initData,items:S.bag.map(l=>({id:l.id,size:l.size,color:l.color,qty:l.qty})),type:'viloyat',promo:S.promo?S.promo.code:undefined,name:c.name.trim(),lang:S.lang});
+    const r=await api('/api/order',{initData:tg.initData,items:S.bag.map(l=>({id:l.id,size:l.size,color:l.color,qty:l.qty})),type:'viloyat',region:S.vf.region,tuman:S.vf.tuman.trim(),address:S.vf.address.trim(),phone:S.vf.phone,promo:S.promo?S.promo.code:undefined,name:c.name.trim(),lang:S.lang});
     after({id:r.id,no:r.no,total:r.total});
   }catch(err){ orderFail(err); }
 }
@@ -703,15 +698,14 @@ function render(){
   const v=curView();
   { const ob=document.getElementById('ordbtn'); if(ob) ob.hidden=!S.live||v==='verify'||v==='checkout'||v==='done'; }
   if(S.map){ try{ S.map.remove(); }catch(e){} S.map=null; }
-  const body = v==='verify'?verifyView(): v==='home'?home(): v==='pdp'?pdp(): v==='bag'?bagView(): v==='favs'?favsView(): v==='pay'?payView(): v==='vform'?vform(): v==='sizes'?sizesView(): v==='orders'?ordersView(): v==='store'?storeView(): v==='checkout'?checkout(): done();
+  const body = v==='verify'?verifyView(): v==='home'?home(): v==='pdp'?pdp(): v==='bag'?bagView(): v==='favs'?favsView(): v==='pay'?payView(): v==='sizes'?sizesView(): v==='orders'?ordersView(): v==='store'?storeView(): v==='checkout'?checkout(): done();
   $('#app').innerHTML = (S.demoNote?`<div class="banner">${t('demoBanner')}</div>`:'') + body;
   if(tg){
     try{ if(S.nav.length>1 && v!=='done' && v!=='verify') tg.BackButton.show(); else tg.BackButton.hide(); }catch(e){}
     try{ if(v==='checkout' && S.co.type==='courier') tg.disableVerticalSwipes(); else tg.enableVerticalSwipes(); }catch(e){}
   }
   if(v==='store') initStoreMap();
-  if(v==='vform') bindVform();
-  if(v==='checkout'){ bindForm(); if(S.co.type==='courier') initMap(); }
+  if(v==='checkout'){ bindForm(); if(S.co.type==='viloyat') bindVform(); if(S.co.type==='courier') initMap(); }
 }
 function bindForm(){
   const n=$('#f-name'), ph=$('#f-phone'), d=$('#f-district'), a=$('#f-address');
@@ -724,7 +718,8 @@ async function place(){
   if(S.busy) return;
   const c=S.co, e={};
   if(!c.name.trim()) e.name=1;
-  if(!S.live && c.phone.length!==9) e.phone=1;
+  if(!S.live && c.type!=='viloyat' && c.phone.length!==9) e.phone=1;
+  if(c.type==='viloyat'){ const f=S.vf; if(!f.region) e.region=1; if(f.tuman.trim().length<2) e.tuman=1; if(f.address.trim().length<3) e.address=1; if(f.phone.replace(/\D/g,'').length!==9) e.vphone=1; }
   if(c.type==='courier'){
     if(!c.address.trim()) e.address=1;
     if(!c.pin) e.pin=1; else if(!inZone(c.lat,c.lon)) e.zone=1;
@@ -913,19 +908,10 @@ document.addEventListener('click',ev=>{
     case 'vmethod': S.vm=+v; render(); break;
     case 'dopay': {
       if(S.busy||!S.vo) break; S.busy=true; render();
-      const next=()=>{ S.busy=false; toVillage(); S.nav=['home','vform']; render(); haptic('medium'); window.scrollTo(0,0); };
-      if(!S.live||!S.vo.id){ setTimeout(next,700); break; }
-      api('/api/pay',{initData:tg.initData,id:S.vo.id}).then(next).catch(orderFail); break; }
-    case 'vsubmit': {
-      const f=S.vf, e={};
-      if(!f.region) e.region=1; if(f.tuman.trim().length<2) e.tuman=1; if(f.name.trim().length<2) e.name=1;
-      if(f.phone.replace(/\D/g,'').length!==9) e.phone=1; if(f.address.trim().length<3) e.address=1;
-      S.err=e; if(Object.keys(e).length){ render(); haptic('heavy'); const el=document.querySelector('.err'); if(el) el.scrollIntoView({block:'center',behavior:'smooth'}); break; }
-      if(S.busy||!S.vo) break; S.busy=true; render();
-      const fin=no=>{ S.order={live:S.live,viloyat:true,no,total:S.vo.total,name:f.name.trim(),phone:f.phone,type:'viloyat',address:`${f.region}, ${f.tuman}, ${f.address}`,items:S.vo.items||[]}; S.busy=false; S.vo=null; S.vf={region:'',tuman:'',name:'',phone:'',address:''}; S.nav=['home','done']; render(); window.scrollTo(0,0); try{ tg.HapticFeedback.notificationOccurred('success'); }catch(x){} };
-      if(!S.live||!S.vo.id){ setTimeout(()=>fin(S.vo.no),500); break; }
-      api('/api/viloyat',{initData:tg.initData,id:S.vo.id,region:f.region,tuman:f.tuman,name:f.name,phone:f.phone,address:f.address}).then(r=>fin(r.no)).catch(orderFail); break; }
-    case 'vresume': { const o=(S.myOrders||[]).find(x=>x.id===+v); if(!o) break; S.vo={id:o.id,no:o.no,total:o.total}; toVillage(); S.nav=['home',o.status==='paid'?'vform':'pay']; render(); window.scrollTo(0,0); break; }
+      const fin=no=>{ const o=S.vo, f=S.vf; S.order={live:S.live,viloyat:true,no:no||o.no,total:o.total,name:o.name||S.co.name,phone:f.phone,type:'viloyat',address:`${f.region}, ${f.tuman}, ${f.address}`,items:o.items||[]}; S.busy=false; S.vo=null; S.vf={region:'',tuman:'',name:'',phone:'',address:''}; S.nav=['home','done']; render(); window.scrollTo(0,0); try{ tg.HapticFeedback.notificationOccurred('success'); }catch(x){} };
+      if(!S.live||!S.vo.id){ setTimeout(()=>fin(),700); break; }
+      api('/api/pay',{initData:tg.initData,id:S.vo.id}).then(r=>fin(r.no)).catch(orderFail); break; }
+    case 'vresume': { const o=(S.myOrders||[]).find(x=>x.id===+v); if(!o) break; S.vo={id:o.id,no:o.no,total:o.total}; S.nav=['home','pay']; render(); window.scrollTo(0,0); break; }
     case 'pay': S.co.pay=v; render(); break;
     case 'share': shareNumber(); break;
     case 'recheck': pollVerified(); break;

@@ -1,5 +1,5 @@
 'use strict';
-/* Region (viloyat) delivery: prepayment, details after payment, BTS tracking, expiry. Run: node scripts/test-viloyat.js */
+/* Region (viloyat) delivery: details with the order, prepayment first, BTS tracking, expiry. Run: node scripts/test-viloyat.js */
 const assert = require('assert');
 const crypto = require('crypto');
 process.env.BOT_TOKEN = '123456:TEST_TOKEN';
@@ -32,7 +32,7 @@ const sign = (id) => {
   return p.toString();
 };
 const call = async (h, body, headers = {}) => { const r = mkRes(); await h({ method: 'POST', body, headers }, r); return r; };
-const order = require('../api/order'), pay = require('../api/pay'), vil = require('../api/viloyat'), admin = require('../api/admin'), orders = require('../api/orders');
+const order = require('../api/order'), pay = require('../api/pay'), admin = require('../api/admin'), orders = require('../api/orders');
 const { nextStatuses } = require('../lib/render');
 const { REGIONS } = require('../lib/catalog');
 let n = 0; const ok = (m) => console.log(`  ok ${++n} ${m}`);
@@ -40,32 +40,34 @@ let n = 0; const ok = (m) => console.log(`  ok ${++n} ${m}`);
 (async () => {
   const A = sign(501), B = sign(502);
   const items = [{ id: 1, size: 'M', color: 0, qty: 1 }];
-  let r = await call(order, { initData: A, type: 'viloyat', items, name: 'Ali' });
+  const det = { region: REGIONS[3], tuman: 'Marg‘ilon', address: 'Mustaqillik 5', phone: '90 123 45 67', name: 'Ali Valiyev' };
+
+  let r = await call(order, { initData: A, type: 'viloyat', items, name: 'Ali', ...det, region: 'Mars' });
+  assert.strictEqual(r.code, 400); r = await call(order, { initData: A, type: 'viloyat', items, name: 'Ali', ...det, phone: '12' });
+  assert.strictEqual(r.code, 400); r = await call(order, { initData: A, type: 'viloyat', items, name: 'Ali', ...det, tuman: '' });
+  assert.strictEqual(r.code, 400); assert.strictEqual(tables.orders.length, 0); ok('order without a valid region, district or phone is refused');
+
+  r = await call(order, { initData: A, type: 'viloyat', items, name: 'Ali Valiyev', ...det });
   assert.strictEqual(r.code, 200); assert.ok(r.body.pending && r.body.id);
   const id = r.body.id, o = tables.orders[0];
   assert.strictEqual(o.status, 'awaiting_payment'); assert.strictEqual(o.delivery_fee, 35000); assert.strictEqual(o.pay, 'prepaid');
+  assert.strictEqual(o.region, REGIONS[3]); assert.strictEqual(o.district, 'Marg‘ilon'); assert.strictEqual(o.recipient_phone, '998901234567'); assert.strictEqual(o.phone, '998901112233');
   assert.ok(!calls.some((c) => c.m === 'sendMessage' && c.b.chat_id === '-100777'));
-  ok('region order is created unpaid, fee 35 000, nothing sent to staff yet');
-
-  r = await call(vil, { initData: A, id, region: REGIONS[3], tuman: 'Marg‘ilon', name: 'Ali Valiyev', phone: '901234567', address: 'Mustaqillik 5' });
-  assert.strictEqual(r.code, 409); assert.strictEqual(r.body.error, 'not_paid'); ok('details are refused before payment');
+  ok('details are saved with the order, fee 35 000, verified phone kept, nothing sent to staff before payment');
 
   r = await call(pay, { initData: B, id }); assert.strictEqual(r.code, 404); ok('another customer cannot pay this order');
-  r = await call(pay, { initData: A, id }); assert.strictEqual(r.body.status, 'paid'); assert.ok(o.paid_at);
-  r = await call(pay, { initData: A, id }); assert.strictEqual(r.code, 200); ok('payment marks it paid (second call changes nothing)');
-
-  r = await call(vil, { initData: A, id, region: 'Mars', tuman: 'X', name: 'Ali', phone: '901234567', address: 'abc' });
-  assert.strictEqual(r.code, 400); r = await call(vil, { initData: A, id, region: REGIONS[3], tuman: 'Marg‘ilon', name: 'Ali', phone: '12', address: 'abc' });
-  assert.strictEqual(r.code, 400); ok('unknown region or bad phone rejected');
-
-  r = await call(vil, { initData: A, id, region: REGIONS[3], tuman: 'Marg‘ilon', name: 'Ali Valiyev', phone: '90 123 45 67', address: 'Mustaqillik 5' });
-  assert.strictEqual(r.code, 200); assert.strictEqual(o.status, 'new'); assert.strictEqual(o.recipient_phone, '998901234567');
+  r = await call(pay, { initData: A, id }); assert.strictEqual(r.code, 200); assert.strictEqual(o.status, 'new'); assert.ok(o.paid_at);
   const g = calls.find((c) => c.m === 'sendMessage' && c.b.chat_id === '-100777');
-  assert.ok(g && g.b.text.includes('BTS Express') && g.b.text.includes('Marg‘ilon') && g.b.text.includes('To‘langan')); ok('after details: order in staff group with BTS Express, region and paid mark');
-  r = await call(vil, { initData: A, id, region: REGIONS[3], tuman: 'Q', name: 'Ali', phone: '901234567', address: 'abc' });
-  assert.strictEqual(r.code, 409); ok('details cannot be sent twice');
+  assert.ok(g && g.b.text.includes('BTS Express') && g.b.text.includes('Marg‘ilon') && g.b.text.includes('To‘langan') && g.b.text.includes('+998 90 123 45 67'));
+  ok('after payment the order reaches the staff group with BTS Express, region and the recipient phone');
+  const sent = calls.filter((c) => c.b.chat_id === '-100777').length;
+  r = await call(pay, { initData: A, id }); assert.strictEqual(r.code, 200); assert.strictEqual(calls.filter((c) => c.b.chat_id === '-100777').length, sent);
+  ok('paying twice does nothing more');
 
-  assert.deepStrictEqual(nextStatuses({ type: 'viloyat', status: 'paid' }), ['cancelled']);
+  r = await call(order, { initData: A, type: 'viloyat', items, name: 'Ali', ...det, phone: '' });
+  assert.strictEqual(r.code, 400); ok('recipient phone is required (the shop fills it with the Telegram number, the customer may change it)');
+
+  assert.deepStrictEqual(nextStatuses({ type: 'viloyat', status: 'awaiting_payment' }), ['cancelled']);
   assert.deepStrictEqual(nextStatuses({ type: 'viloyat', status: 'new' }), ['accepted', 'cancelled']); ok('status steps for region orders');
 
   const tok = (await call(admin, { action: 'login', password: 'pw-long-enough' })).body.token; const H = { 'x-admin-token': tok };
@@ -76,13 +78,13 @@ let n = 0; const ok = (m) => console.log(`  ok ${++n} ${m}`);
   assert.ok(note && note.b.text.includes('BTS Express') && note.b.text.includes('BTS-778812')); ok('sending via BTS saves the tracking number and tells the customer');
   r = await call(orders, { initData: A }); assert.strictEqual(r.body.orders[0].track, 'BTS-778812'); ok('customer sees the tracking number in My orders');
 
-  r = await call(order, { initData: B, type: 'viloyat', items, name: 'Vali' }); const id2 = r.body.id;
+  r = await call(order, { initData: B, type: 'viloyat', items, name: 'Vali', ...det }); const id2 = r.body.id;
   tables.orders.find((x) => x.id === id2).created_at = new Date(Date.now() - 31 * 60000).toISOString();
   await call(admin, { action: 'list' }, H);
   assert.strictEqual(tables.orders.find((x) => x.id === id2).status, 'cancelled'); ok('unpaid order older than 30 min is cancelled automatically');
 
   process.env.DEMO_PAYMENTS = 'off';
-  r = await call(order, { initData: B, type: 'viloyat', items, name: 'Vali' }); r = await call(pay, { initData: B, id: r.body.id });
+  r = await call(order, { initData: B, type: 'viloyat', items, name: 'Vali', ...det }); r = await call(pay, { initData: B, id: r.body.id });
   assert.strictEqual(r.code, 501); ok('demo payment can be switched off');
   console.log('\nRegion delivery checks passed');
 })().catch((e) => { console.error('FAIL', e); process.exit(1); });
