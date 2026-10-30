@@ -587,8 +587,7 @@ function checkout(){
   const vf=S.vf;
   const vbox=`<div class="field"><span class="muted" style="font-size:13px">${t('vilBts')}</span></div>
     <label class="field"><span>${t('region')}</span><select class="inp ${e.region?'err':''}" id="v-region"><option value="">${t('pickRegion')}</option>${REGIONS.map(r=>`<option ${vf.region===r?'selected':''}>${r}</option>`).join('')}</select>${er('region')}</label>
-    <label class="field"><span>${t('district')}</span><input class="inp ${e.tuman?'err':''}" id="v-tuman" value="${qa(vf.tuman)}">${er('tuman')}</label>
-    <label class="field"><span>${t('vAddress')}</span><input class="inp ${e.address?'err':''}" id="v-address" value="${qa(vf.address)}">${er('address')}</label>`;
+    <label class="field"><span>${t('district')}</span><input class="inp ${e.tuman?'err':''}" id="v-tuman" value="${qa(vf.tuman)}">${er('tuman')}</label>`;
   const vphone=`<label class="field"><span>${t('phone')}</span><div class="phone"><b>+998</b><input class="inp ${e.vphone?'err':''}" id="v-phone" inputmode="numeric" placeholder="90 123 45 67" value="${fmtPhone(vf.phone)}"></div>${S.live?`<div class="muted" style="font-size:12px;margin-top:6px">\u2713 ${t('vPhoneNote')}</div>`:''}${er('vphone')}</label>`;
   const phoneBlock = c.type==='viloyat' ? vphone : S.live
     ? `<div class="field"><span>${t('phone')}</span><div class="vphone">${shown}<span class="tag ok">✓ ${t('phoneOk')}</span></div></div>`
@@ -645,7 +644,7 @@ async function placeVil(){
   const after=r=>{ S.vo=r; S.bag=[]; S.promo=null; save(); S.busy=false; S.nav=['home','pay']; render(); window.scrollTo(0,0); haptic('medium'); };
   if(!S.live){ after({id:null,no:'NM-'+(1000+Math.floor(Math.random()*9000)),total:subtotal()-disc()+VILOYAT_FEE,items:S.bag.slice(),name:c.name.trim()}); return; }
   try{
-    const r=await api('/api/order',{initData:tg.initData,items:S.bag.map(l=>({id:l.id,size:l.size,color:l.color,qty:l.qty})),type:'viloyat',region:S.vf.region,tuman:S.vf.tuman.trim(),address:S.vf.address.trim(),phone:S.vf.phone,promo:S.promo?S.promo.code:undefined,name:c.name.trim(),lang:S.lang});
+    const r=await api('/api/order',{initData:tg.initData,items:S.bag.map(l=>({id:l.id,size:l.size,color:l.color,qty:l.qty})),type:'viloyat',region:S.vf.region,tuman:S.vf.tuman.trim(),phone:S.vf.phone,promo:S.promo?S.promo.code:undefined,name:c.name.trim(),lang:S.lang});
     after({id:r.id,no:r.no,total:r.total});
   }catch(err){ orderFail(err); }
 }
@@ -719,7 +718,7 @@ async function place(){
   const c=S.co, e={};
   if(!c.name.trim()) e.name=1;
   if(!S.live && c.type!=='viloyat' && c.phone.length!==9) e.phone=1;
-  if(c.type==='viloyat'){ const f=S.vf; if(!f.region) e.region=1; if(f.tuman.trim().length<2) e.tuman=1; if(f.address.trim().length<3) e.address=1; if(f.phone.replace(/\D/g,'').length!==9) e.vphone=1; }
+  if(c.type==='viloyat'){ const f=S.vf; if(!f.region) e.region=1; if(f.tuman.trim().length<2) e.tuman=1; if(f.phone.replace(/\D/g,'').length!==9) e.vphone=1; }
   if(c.type==='courier'){
     if(!c.address.trim()) e.address=1;
     if(!c.pin) e.pin=1; else if(!inZone(c.lat,c.lon)) e.zone=1;
@@ -908,7 +907,7 @@ document.addEventListener('click',ev=>{
     case 'vmethod': S.vm=+v; render(); break;
     case 'dopay': {
       if(S.busy||!S.vo) break; S.busy=true; render();
-      const fin=no=>{ const o=S.vo, f=S.vf; S.order={live:S.live,viloyat:true,no:no||o.no,total:o.total,name:o.name||S.co.name,phone:f.phone,type:'viloyat',address:`${f.region}, ${f.tuman}, ${f.address}`,items:o.items||[]}; S.busy=false; S.vo=null; S.vf={region:'',tuman:'',name:'',phone:'',address:''}; S.nav=['home','done']; render(); window.scrollTo(0,0); try{ tg.HapticFeedback.notificationOccurred('success'); }catch(x){} };
+      const fin=no=>{ const o=S.vo, f=S.vf; S.order={live:S.live,viloyat:true,no:no||o.no,total:o.total,name:o.name||S.co.name,phone:f.phone,type:'viloyat',address:`${f.region}, ${f.tuman}`,items:o.items||[]}; S.busy=false; S.vo=null; S.vf={region:'',tuman:'',name:'',phone:'',address:''}; S.nav=['home','done']; render(); window.scrollTo(0,0); try{ tg.HapticFeedback.notificationOccurred('success'); }catch(x){} };
       if(!S.live||!S.vo.id){ setTimeout(()=>fin(),700); break; }
       api('/api/pay',{initData:tg.initData,id:S.vo.id}).then(r=>fin(r.no)).catch(orderFail); break; }
     case 'vresume': { const o=(S.myOrders||[]).find(x=>x.id===+v); if(!o) break; S.vo={id:o.id,no:o.no,total:o.total}; S.nav=['home','pay']; render(); window.scrollTo(0,0); break; }

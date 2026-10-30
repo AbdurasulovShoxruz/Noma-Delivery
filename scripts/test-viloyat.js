@@ -40,7 +40,7 @@ let n = 0; const ok = (m) => console.log(`  ok ${++n} ${m}`);
 (async () => {
   const A = sign(501), B = sign(502);
   const items = [{ id: 1, size: 'M', color: 0, qty: 1 }];
-  const det = { region: REGIONS[3], tuman: 'Marg‘ilon', address: 'Mustaqillik 5', phone: '90 123 45 67', name: 'Ali Valiyev' };
+  const det = { region: REGIONS[3], tuman: 'Marg‘ilon', phone: '90 123 45 67', name: 'Ali Valiyev' };
 
   let r = await call(order, { initData: A, type: 'viloyat', items, name: 'Ali', ...det, region: 'Mars' });
   assert.strictEqual(r.code, 400); r = await call(order, { initData: A, type: 'viloyat', items, name: 'Ali', ...det, phone: '12' });

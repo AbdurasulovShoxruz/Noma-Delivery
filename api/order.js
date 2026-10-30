@@ -51,7 +51,7 @@ module.exports = async (req, res) => {
       district = clean(b.tuman, 60);
       address = clean(b.address, 200);
       rphone = normalizePhone('998' + String(b.phone || '').replace(/\D/g, '').slice(-9));
-      if (!region || district.length < 2 || address.length < 3 || !rphone) return res.status(400).json({ error: 'bad_details' });
+      if (!region || district.length < 2 || !rphone) return res.status(400).json({ error: 'bad_details' });
     }
     const name = clean(b.name, 60) || customer.first_name || '—';
     const lang = b.lang === 'ru' ? 'ru' : 'uz';
