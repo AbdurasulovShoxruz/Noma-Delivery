@@ -787,7 +787,7 @@ async function api(path, body){
 }
 async function loadShop(){
   try{
-    const r=await fetch('/api/shop'), j=await r.json();
+    const r=await fetch('/api/shop?t='+Date.now(),{cache:'no-store'}), j=await r.json();
     if(j.products && j.products.length){
       P.length=0;
       j.products.forEach(x=>P.push({id:x.id,cat:x.cat,art:x.art,mat:x.mat,price:x.price,old:x.old,stock:x.stock,sub:x.sub,photos:x.photos,isNew:!!x.isNew,sizeStock:x.sizeStock,matText:x.matText,sizes:x.sizes,colors:x.colors,name:{uz:x.name.uz,ru:x.name.ru,en:x.name.uz}}));
@@ -962,6 +962,18 @@ $('#favbtn').addEventListener('click',()=>{ const v=curView(); if(v!=='verify'&&
 $('#logo').addEventListener('click',()=>{ S.nav=['home']; closeSheet(); render(); window.scrollTo(0,0); });
 if(tg){ try{ tg.BackButton.onClick(back); }catch(e){} }
 applyTheme();
+/* New or changed products (admin panel) show up without reloading the mini app */
+async function refreshShop(){
+  const v=curView(), ae=document.activeElement;
+  if(['verify','checkout','pay','done'].includes(v)||S.busy||(S.sheet&&S.sheet.id)||(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName))) return;
+  const sig=()=>P.map(p=>[p.id,p.price,p.stock,p.old,(p.photos||[]).length].join('|')).join(',');
+  const before=sig(); await loadShop();
+  if(sig()!==before){ if(v==='pdp'&&!pById(S.pid)){ S.nav=['home']; } render(); }
+}
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) refreshShop(); });
+try{ tg.onEvent('activated',refreshShop); }catch(e){}
+setInterval(()=>{ if(!document.hidden) refreshShop(); },45000);
+
 init();
 </script>
 </body>

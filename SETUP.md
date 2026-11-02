@@ -162,3 +162,6 @@ Run `supabase-sizes.sql` in the Supabase SQL Editor (after the other SQL files),
 5. **Broadcast tab:** send a bot message (with an optional "Open the shop" button) to all verified customers. It sends in batches and shows progress.
 6. **Payments:** the online payment for Viloyat orders is a demo (Click / Payme screen, no real money). There is no real Click or Payme connection; `DEMO_PAYMENTS=off` in Vercel switches the demo off.
 7. **Also new:** customers can cancel their own order from My orders while it is still new (Viloyat: while unpaid); a courier name field on orders (shown in the staff group message); rate limits on admin login, orders, payments; a share button on products; a "recently viewed" row on the home page.
+
+## Products appear without reloading
+The shop checks for new, changed or sold-out products when the customer returns to the mini app and every 45 seconds while it is open (it does not interrupt checkout, payment or typing). In Telegram, closing and reopening the mini app also loads the newest list.
