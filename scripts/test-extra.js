@@ -17,6 +17,9 @@ global.fetch = async (url, o = {}) => {
   url = String(url);
   if (url.startsWith('https://api.telegram.org/')) { const m = url.split('/').pop(); calls.push({ m, b: JSON.parse(o.body || '{}') }); return reply({ ok: true, result: { message_id: ++msg } }); }
   if (url.includes('/rpc/')) return reply(true);
+  if (url.startsWith('https://unsplash.com/photos/')) return { ok: true, status: 200, url, text: async () => '<meta property="og:image" content="https://images.unsplash.com/photo-1?w=1200&amp;q=80">' };
+  if (url.startsWith('https://images.unsplash.com/')) return { ok: true, status: 200, arrayBuffer: async () => { const b = Buffer.alloc(900, 1); b[0] = 0xff; b[1] = 0xd8; return b; } };
+  if (url.includes('/storage/v1/object/products/')) return { ok: true, status: 200, text: async () => '' };
   const [t, qs = ''] = url.replace('https://sb.test/rest/v1/', '').split('?'), q = new URLSearchParams(qs), rows = tables[t];
   const f = [...q.entries()];
   const match = (r) => f.every(([k, v]) => v.startsWith('eq.') ? String(r[k]) === v.slice(3) : v.startsWith('lt.') ? String(r[k]) < v.slice(3) : true);
@@ -67,6 +70,10 @@ let n = 0; const ok = (m) => console.log(`  ok ${++n} ${m}`);
   r = await call(admin, { action: 'broadcast', text: 'Yangi kolleksiya!', offset: 0 }, H);
   assert.strictEqual(r.body.sent, 2); assert.strictEqual(r.body.done, true); ok('broadcast reaches both verified customers');
   r = await call(admin, { action: 'broadcast', text: 'x' }, H); assert.strictEqual(r.code, 400); ok('too short broadcast refused');
+  r = await call(admin, { action: 'photo_import', url: 'https://unsplash.com/photos/abc' }, H);
+  assert.strictEqual(r.code, 200); assert.ok(r.body.url.startsWith('https://sb.test/storage/v1/object/public/products/')); ok('a free-photo page link is downloaded into the shop storage');
+  for (const bad of ['https://evil.example/x.jpg', 'http://images.unsplash.com/a.jpg', 'not a link']) { r = await call(admin, { action: 'photo_import', url: bad }, H); assert.strictEqual(r.code, 400); }
+  ok('other hosts, plain http and junk are refused');
   for (let i = 0; i < 9; i++) r = await call(admin, { action: 'login', password: 'wrong' });
   assert.strictEqual(r.code, 429); ok('admin login is rate limited');
   console.log('\nExtra checks passed');

@@ -17,6 +17,36 @@ const okToken = (t) => {
   return !!(env('ADMIN_PASSWORD') && exp && sig && Number(exp) > Date.now() && same(sig, sign(exp)));
 };
 
+/* Photo import: the admin pastes a photo page or image link from a free-photo site; the server downloads it into the shop's own storage. */
+const IMG_HOSTS = ['images.unsplash.com', 'images.pexels.com', 'cdn.pixabay.com', 'burst.shopifycdn.com'];
+const PAGE_HOSTS = ['unsplash.com', 'www.unsplash.com', 'pexels.com', 'www.pexels.com', 'pixabay.com', 'burst.shopify.com'];
+async function importPhoto(link) {
+  let u;
+  try { u = new URL(String(link || '').trim()); } catch (e) { return null; }
+  if (u.protocol !== 'https:') return null;
+  if (PAGE_HOSTS.includes(u.hostname)) { // a photo page: read its preview image address
+    const r = await fetch(u, { headers: { 'user-agent': 'Mozilla/5.0' } });
+    if (!r.ok || !PAGE_HOSTS.includes(new URL(r.url || u).hostname)) return null;
+    const html = (await r.text()).slice(0, 600000);
+    const m = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)/i) || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    if (!m) return null;
+    try { u = new URL(m[1].replace(/&amp;/g, '&')); } catch (e) { return null; }
+  }
+  if (u.protocol !== 'https:' || !IMG_HOSTS.includes(u.hostname)) return null;
+  const r = await fetch(u, { redirect: 'error' });
+  if (!r.ok) return null;
+  const buf = Buffer.from(await r.arrayBuffer());
+  if (buf.length < 500 || buf.length > 6e6) return null;
+  const jpg = buf[0] === 0xff && buf[1] === 0xd8, png = buf[0] === 0x89 && buf.slice(1, 4).toString() === 'PNG', webp = buf.slice(0, 4).toString() === 'RIFF' && buf.slice(8, 12).toString() === 'WEBP';
+  if (!jpg && !png && !webp) return null;
+  const ext = jpg ? 'jpg' : png ? 'png' : 'webp', name = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${ext}`, k = env('SUPABASE_SERVICE_KEY');
+  const headers = { apikey: k, 'content-type': jpg ? 'image/jpeg' : png ? 'image/png' : 'image/webp', 'x-upsert': 'true' };
+  if (k && k.startsWith('eyJ')) headers.Authorization = `Bearer ${k}`;
+  const up = await fetch(`${env('SUPABASE_URL')}/storage/v1/object/products/${name}`, { method: 'POST', headers, body: buf });
+  if (!up.ok) { console.error('import upload', up.status); return null; }
+  return `${env('SUPABASE_URL')}/storage/v1/object/public/products/${name}`;
+}
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method' });
   if (!env('ADMIN_PASSWORD')) return res.status(503).json({ error: 'no_admin_password' });
@@ -143,6 +173,10 @@ module.exports = async (req, res) => {
       const r = await fetch(`${env('SUPABASE_URL')}/storage/v1/object/products/${name}`, { method: 'POST', headers, body: buf });
       if (!r.ok) { console.error('upload', r.status, await r.text()); return res.status(502).json({ error: 'upload_failed' }); }
       return res.status(200).json({ url: `${env('SUPABASE_URL')}/storage/v1/object/public/products/${name}` });
+    }
+    if (b.action === 'photo_import') {
+      const url = await importPhoto(b.url).catch((e) => { console.error('import', e.message); return null; });
+      return url ? res.status(200).json({ url }) : res.status(400).json({ error: 'bad_link' });
     }
     if (b.action === 'product_delete') {
       await db(`shop_products?id=eq.${Number(b.id) | 0}`, { method: 'DELETE' }); clearShop();

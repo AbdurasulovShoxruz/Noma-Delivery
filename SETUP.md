@@ -165,3 +165,6 @@ Run `supabase-sizes.sql` in the Supabase SQL Editor (after the other SQL files),
 
 ## Products appear without reloading
 The shop checks for new, changed or sold-out products when the customer returns to the mini app and every 45 seconds while it is open (it does not interrupt checkout, payment or typing). In Telegram, closing and reopening the mini app also loads the newest list.
+
+## Photos from free-photo sites
+In the product editor, next to **+ Photo** there is **+ Link**. Paste the link of a photo page from Unsplash, Pexels, Pixabay or Burst (or a direct image link from their image servers); the server downloads it into your own `products` storage and adds it to the product, tagged with the next free colour. Check each site's license before using a photo for a paying client.
